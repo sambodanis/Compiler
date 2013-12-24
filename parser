@@ -1,0 +1,253 @@
+
+
+
+#import ply.lex as lex
+import ply.yacc as yacc
+import lexer
+from lexer import tokens
+import AST
+
+
+trace = False
+
+start = 'program'
+
+precedence = (
+    #('nonassoc', 'LESSTHAN', 'GREATERTHAN'),
+    ('left', 'PLUS', 'MINUS'),
+    ('left', 'TIMES', 'DIVIDE'),
+)
+
+def p_program(p):
+    '''program : programFront compoundStatement'''
+    if trace: print 'a'
+    if p[1]:
+        p[0] = AST.AST('program', None, p[1:], False)
+    else:
+        p[0] = AST.AST('program', None, p[2:], False)
+
+def p_compoundStatement(p):
+    '''compoundStatement : BEGIN statementStar END'''
+    if trace: print 'b'
+    p[0] = AST.AST('compoundStatement', None, p[2], False)
+
+#| LPAREN ARRAY declaration commaDeclaration SEMI
+def p_programFront(p):
+    '''programFront : empty
+    | ARRAY declaration commaDeclaration SEMI
+    '''
+    if trace: print 'c'
+    if len(p) > 2:
+        p[0] = AST.AST('programFront', None, [p[3], p[4]], False)
+
+
+
+def p_commaDeclaration(p):
+    '''commaDeclaration : empty
+    | COMMA declaration
+    | COMMA declaration commaDeclaration'''
+    if trace: print 'd'
+    if len(p) > 2:
+        p[0] = AST.AST('commaDeclaration', None, p[2:], False)
+
+
+
+def p_declaration(p):
+    '''declaration : ID LSBRACKET CONSTANT RSBRACKET'''
+    if trace: print 'e'
+    #TODO check if this is actually a left and right bracket
+    p[0] = AST.AST('declaration', [p[1], p[3]], None, True)
+
+
+def p_statementStar(p):
+    '''statementStar : statementStar statement SEMI
+    | statement SEMI
+    | empty
+    '''
+    if trace: print 'f'
+    if len(p) > 2:
+        p[0] = AST.AST('statementStar', None, p[1:len(p) - 1], False)
+
+
+def p_statement(p):
+    '''statement : variable ASSIGNMENT expression
+    | READ LPAREN variable RPAREN
+    | WRITE LPAREN expression RPAREN
+    | WRITE LPAREN STRING RPAREN
+    | WRITELN
+    | IF expression relation expression compoundStatement lpElseCompoundStatementRp
+    | REPEAT compoundStatement UNTIL expression relation expression
+    '''
+    if trace: print 'g'
+    if len(p) == 2:
+        p[0] = AST.AST('statement', p[1], None, True)
+    elif len(p) == 4:
+        p[0] = AST.AST('statement', p[2], [p[1], p[3]], False)
+    elif len(p) == 5:
+        if isinstance(p[3], AST.AST):
+            p[0] = AST.AST('statement', p[1], p[3], False)
+        else:
+            p[0] = AST.AST('statement', [p[1], p[3]], None, True) # Check if leaf
+    elif len(p) == 7:
+        if p[1] == 'if':
+            p[0] = AST.AST('statement', p[1], p[2:], False)
+        else:
+            p[0] = AST.AST('statement', p[1], [p[2]] + p[4:], False)
+
+
+def p_lpElseCompoundStatementRp(p):
+    '''lpElseCompoundStatementRp : ELSE compoundStatement
+    | empty
+    '''
+    if trace: print 'g'
+    if len(p) > 2:
+        p[0] = AST.AST('lpElseCompoundStatementRp', p[1], p[2], False)
+
+
+#def p_lpElseCompoundStatementRp(p):
+#    '''lpElseCompoundStatementRp : LPAREN ELSE compoundStatement RPAREN
+#    | empty
+#    '''
+
+
+def p_relation(p):
+    '''relation : GT
+    | GE
+    | EQUALS
+    | NE
+    | LE
+    | LT
+    '''
+    if trace: print 'i'
+    p[0] = AST.AST('relation', p[1], None, False)
+
+
+#def p_expression(p):
+#   '''expression : unaryOp term ( ( PLUS | MINUS ) term )*'''
+
+
+def p_expression(p):
+    '''expression : unaryOp term pomTermStar'''
+    if trace: print 'j'
+    p[0] = AST.AST('expression', None, p[1:], False)
+
+
+def p_plusOrMinus(p):
+    '''plusOrMinus : PLUS
+    | MINUS'''
+    if trace: print 'k'
+    p[0] = AST.AST('plusOrMinus', p[1], None, False)
+
+def p_pomTermStar(p):
+    '''pomTermStar : pomTermStar plusOrMinus term
+    | plusOrMinus term
+    | empty
+    '''
+    if trace: print 'l'
+    if len(p) > 2:
+        p[0] = AST.AST('pomTermStar', None, p[1:], False)
+    #print p[0]
+
+def p_unaryOp(p):
+    '''unaryOp : plusOrMinus
+    | empty'''
+    if trace: print 'm'
+    if p[1] != None:
+        p[0] = AST.AST('unaryOp', None, p[1], False)
+
+
+def p_term(p):
+    '''term : factor tdFactorStar'''
+    if trace: print 'n'
+    p[0] = AST.AST('term', None, p[1:], False)
+
+
+def p_timesOrDivide(p):
+    '''timesOrDivide : TIMES
+    | DIVIDE'''
+    if trace: print 'o'
+    p[0] = AST.AST('timesOrDivide', p[1], None, False)
+
+
+def p_tdFactorStar(p):
+    '''tdFactorStar : tdFactorStar timesOrDivide factor
+    | timesOrDivide factor
+    | empty
+    '''
+    if trace: print 'p'
+    if len(p) > 2:
+        p[0] = AST.AST('tdFactorStar', None, p[1:], False)
+
+
+def p_factor(p):
+    '''factor : variable
+    | CONSTANT
+    | LPAREN expression RPAREN
+    '''
+    if trace: print 'q'
+    if len(p) == 2:
+        if isinstance(p[1], AST.AST):
+            p[0] = AST.AST('factor', None, p[1], False)
+        else:
+            p[0] = AST.AST('factor', p[1], None, True)
+    else:
+        p[0] = AST.AST('factor', None, p[2], False)
+
+
+def p_variable(p):
+    '''variable : ID bracketedExpressionStar'''
+    if trace: print 'r'
+    p[0] = AST.AST('variable', p[1], None, True)
+
+def p_bracketedExpressionStar(p):
+    '''bracketedExpressionStar : LSBRACKET expression RSBRACKET
+    | empty'''
+    if len(p) > 2:
+        p[0] = AST.AST('bracketedExpressionStar', None, p[2], False)
+    else:
+        p[0] = p[1]
+
+def p_empty(p):
+    'empty :'
+    p[0] = None
+    pass
+
+
+def p_error(p):
+    if p:
+        print("Syntax error at '%s'" % p.value)
+    else:
+        print("Syntax error at EOF")
+
+
+with open("TestCases/test1.le") as myfile:
+    data = "".join(line.rstrip() for line in myfile)
+
+p = yacc.yacc()
+
+def printAST(astnode, indentation):
+    if not astnode: return
+    #print " " * (indentation), astnode.type
+    #if astnode.leaf:
+    for dat in astnode.data:
+        print " " * indentation, dat
+    #print ""
+        #return
+    #else:
+    t = astnode.type
+    if t == 'relation' or t == 'unaryOp' or t == 'statement' or t == 'expression' or \
+                    t == 'expression' or t == 'term' or t == 'factor':
+        indentation += 1
+    for c in astnode.children:
+        printAST(c, indentation)
+
+ast = p.parse(data)
+
+printAST(ast, 0)
+
+#pprint.pprint(ast)
+
+#print ast.type, ast.data, ast.children, ast.leaf
+
+
+#TODO: Change +-*/ to be roots of their respective subtrees
