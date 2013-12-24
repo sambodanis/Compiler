@@ -1,0 +1,13 @@
+{testsk: program to test constants.}
+begin
+  write('hello world');
+  writeln;
+  write(0.0);
+  writeln;
+  write(12345.6789);
+  writeln;
+  write(5.6e7);
+  writeln;
+  write(1.2e-3);
+  writeln;
+end

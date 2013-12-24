@@ -1,0 +1,16 @@
+{test4: program to test assignment and variables.}
+{Already tested: write statements and constants.}
+begin
+  i := 10023.0;
+  write(i);
+  writeln;
+  a := i;
+  write(a);
+  writeln;
+  j := 76.5;
+  write(j);
+  writeln;
+  a := j;
+  write(a);
+  writeln;
+end

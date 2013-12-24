@@ -1,0 +1,38 @@
+{test0: program to test lexical and syntax analysis.}
+begin
+  read(max);
+  write(max);
+  writeln;
+  num := (331.0*max-0.3e-4)/2.0+max;
+  i1 := -0.0;
+  read(i2);
+  if num != max
+  begin
+    limit := num;
+    if num >= -max
+    begin
+      write(3.0+max/2.0);
+    end;
+  end
+  else
+  begin
+    repeat
+    begin
+      if i1 > alongname*2.0
+      begin
+        max := max/0.13333;
+      end;
+    end
+    until i1 > 2.0*i2-1.0;
+    alongname := max;
+  end;
+  repeat
+  begin
+    if i1 = i2
+    begin
+      write('yes');
+    end;
+    i1 := i1+1.0;
+  end
+  until i1 >= limit;
+end

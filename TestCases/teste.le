@@ -1,0 +1,28 @@
+{please use 12 as your data}
+
+begin
+write('Recommended input:'); writeln;
+write('12.0'); writeln; writeln;
+
+write('Starting test program.');
+writeln;
+writeln;
+write('Please enter a number: ');
+read(num);
+
+count := num;
+fact := 1.0;
+repeat
+  begin
+  fact := fact * count;
+  count := count - 1.0;
+  end
+until count <= 0.01;
+
+write('Factorial of ');
+write(num);
+write(' is ');
+write(fact);
+writeln;
+
+end
