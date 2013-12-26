@@ -66,8 +66,9 @@ def t_CONSTANT(t):
 
 
 def t_COMMENT(t):
-    #TODO Still needs work ?
-    r'{.*(^{)*.*}'
+    #TODO handle multi-line comments
+    r'{(.|\n)*?}'
+    #r'{.*(^{)*.*}'
     #r'{.*}'
     #r'{.*(^((?!}).)*$).*}'
     #print t
@@ -104,7 +105,7 @@ lexer = lex.lex()
 
 l = lex.lex()
 
-with open("TestCases/testa.le") as myfile:
+with open("TestCases/testd.le") as myfile:
     data = "\n".join(line.rstrip() for line in myfile)
     #i = 0
     #while i < len(data):
@@ -114,10 +115,10 @@ with open("TestCases/testa.le") as myfile:
     #        i += 1
     #    i += 1
 
-#l.input(data)
-#while True:
-#    tok = l.token()
-#    if not tok:
-#        break
-#    else:
-#        print tok
+l.input(data)
+while True:
+    tok = l.token()
+    if not tok:
+        break
+    else:
+        print tok

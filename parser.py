@@ -49,6 +49,11 @@ class Parser(object):
 
 class ASTGenerator(Parser):
 
+    # ----------------------$$$$
+        # LEXER
+    # ----------------------$$$$
+
+
     reserved = {
         'array': 'ARRAY',
         'begin': 'BEGIN',
@@ -96,7 +101,8 @@ class ASTGenerator(Parser):
 
     def t_COMMENT(self, t):
         #TODO Still needs work ?
-        r'{.*(^{)*.*}'
+        r'{(.|\n)*?}'
+        #r'{.*(^{)*.*}'
         #r'{.*}'
         #r'{.*(^((?!}).)*$).*}'
         #print t
@@ -128,30 +134,9 @@ class ASTGenerator(Parser):
         t.lexer.skip(1)
 
 
-    #lexer = lex.lex()
-
-
-    #l = lex.lex()
-
-    #with open("TestCases/testa.le") as myfile:
-    #    data = "\n".join(line.rstrip() for line in myfile)
-        #i = 0
-        #while i < len(data):
-        #    if data[i] == '{':
-        #        print 'here'
-        #        data = data[:i] + '\n' + data[i:]
-        #        i += 1
-        #    i += 1
-
-    #l.input(data)
-    #while True:
-    #    tok = l.token()
-    #    if not tok:
-    #        break
-    #    else:
-    #        print tok
-
-
+    # ----------------------$$$$
+        # PARSER
+    # ----------------------$$$$
     trace = False
 
     start = 'program'
@@ -173,13 +158,6 @@ class ASTGenerator(Parser):
     def p_compoundStatement(self, p):
         '''compoundStatement : BEGIN statementStar END'''
         # if trace: print 'b'
-        #root = p[2]
-        #children = []
-        #while root is not None:
-        #    if len(root.children) > 1:
-        #        children.append(root.children[0])
-        #    root = root.children[-1]
-        #p[0] = AST.AST('compoundStatement', None, children, False)
         p[0] = AST.AST('compoundStatement', None, p[2], False)
 
     def p_programFront(self, p):
@@ -192,10 +170,6 @@ class ASTGenerator(Parser):
             p[0] = AST.AST('programFront', None, [p[2], p[3]], False)
 
 
-        #'''commaDeclaration : empty
-        #| COMMA declaration
-        #| COMMA declaration commaDeclaration'''
-
     def p_commaDeclaration(self, p):
         '''commaDeclaration : empty
         | COMMA declaration commaDeclaration'''
@@ -204,14 +178,13 @@ class ASTGenerator(Parser):
             p[0] = AST.AST('commaDeclaration', None, p[2:], False)
 
 
-
     def p_declaration(self, p):
         '''declaration : ID LSBRACKET CONSTANT RSBRACKET'''
         # if trace: print 'e'
         #TODO check if this is actually a left and right bracket
         p[0] = AST.AST('declaration', [p[1], p[3]], None, True)
 
-    #| statement SEMI
+
     def p_statementStar(self, p):
         '''statementStar : statement SEMI statementStar
         | empty
@@ -371,46 +344,5 @@ class ASTGenerator(Parser):
             print("Syntax error at '%s'" % p.value)
         else:
             print("Syntax error at EOF")
-
-    #def printAST(astnode, indentation, g, node_carry, h):
-    #    if not astnode: return
-    #    for dat in astnode.data:
-    #        print " " * indentation, dat
-    #    t = astnode.type
-    #    if t == 'relation' or t == 'unaryOp' or t == 'statement' or t == 'expression' or \
-    #                    t == 'expression' or t == 'term' or t == 'factor':
-    #        indentation += 1
-    #    else:
-    #        indentation += 1
-    #    source = h[0]
-    #    for c in astnode.children:
-    #        h[0] += 1
-    #        if c:
-    #            if node_carry:
-    #                if c.data:
-    #                    g.add_node(pydot.Node(str(h[0]), label=(str(c.type) + ' -> ' + str(c.data))))
-    #                else:
-    #                    g.add_node(pydot.Node(str(h[0]), label=str(c.type)))
-    #                g.add_edge(pydot.Edge(str(source), str(h[0])))
-    #            node_carry = str(h[0])
-    #        printAST(c, indentation, g, node_carry, h)
-
-
-    #with open("TestCases/test0.le") as myfile:
-    #    data = "\n".join(line.rstrip() for line in myfile)
-
-    #p = yacc.yacc()
-
-    #def parse(self, data):
-    #    p = yacc.yacc()
-    #    return p.parse(data)
-
-
-    #ast = p.parse(data)
-
-
-    #graph = pydot.Dot(graph_type='digraph')
-    #printAST(ast, 0, graph, "root", [0])
-    #graph.write_png('example1_graph.png')
 
 #TODO: Change +-*/ to be roots of their respective subtrees
