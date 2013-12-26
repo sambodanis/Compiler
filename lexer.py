@@ -37,7 +37,7 @@ tokens = ['CONSTANT', 'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'LPAREN', 'RPAREN',
           'LSBRACKET', 'RSBRACKET',  'EQUALS', 'LT', 'LE', 'GT', 'GE', 'NE', 'ASSIGNMENT',
           'COMMA', 'SEMI', 'STRING', 'ID'] + list(reserved.values())
 
-t_ignore = ' \t'
+t_ignore = ' \t' # ?
 
 t_EQUALS = r'='
 t_PLUS = r'\+'
@@ -57,7 +57,7 @@ t_ASSIGNMENT = r':='
 t_COMMA = r'\,'
 t_SEMI = r';'
 t_STRING = r'\'.*?(\'\'.*?\'\')*\''
-
+#t_ignore_COMMENT = r'{(^})*}'
 
 def t_CONSTANT(t):
     r'[0-9]*\.[0-9]*(e(-)?[0-9]*)?'
@@ -66,8 +66,11 @@ def t_CONSTANT(t):
 
 
 def t_COMMENT(t):
-    # Still needs work
-    r'{(^{)*.*}'
+    #TODO Still needs work ?
+    r'{.*(^{)*.*}'
+    #r'{.*}'
+    #r'{.*(^((?!}).)*$).*}'
+    #print t
     pass
 
 
@@ -75,6 +78,14 @@ def t_COMMENT(t):
 #    r'\n+'
 #    t.lexer.lineno += t.value.count("\n")
 #    return t
+
+# Define a rule so we can track line numbers
+def t_newline(t):
+    r'\n+'
+    #t.lexer.lineno += len(t.value)
+    t.lexer.lineno += t.value.count("\n")
+
+
 
 
 def t_ID(t):
@@ -91,28 +102,18 @@ def t_error(t):
 lexer = lex.lex()
 
 
-#   # Build the lexer
-#   def build(self, **kwargs):
-#       self.lexer = lex.lex(module=self, **kwargs)
-#
-#   # Test it output
-#   def test(self, data):
-#       self.lexer.input(data)
-#       while True:
-#           tok = self.lexer.token()
-#           if not tok:
-#               break
-#           print tok
-#       print tok
-#
-#
-#lx = Lexer()
-#lx.build()
-##lx.test("3 + 4")
 l = lex.lex()
 
-#with open("TestCases/test1.le") as myfile:
-#    data = "".join(line.rstrip() for line in myfile)
+with open("TestCases/testa.le") as myfile:
+    data = "\n".join(line.rstrip() for line in myfile)
+    #i = 0
+    #while i < len(data):
+    #    if data[i] == '{':
+    #        print 'here'
+    #        data = data[:i] + '\n' + data[i:]
+    #        i += 1
+    #    i += 1
+
 #l.input(data)
 #while True:
 #    tok = l.token()

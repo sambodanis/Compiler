@@ -95,7 +95,7 @@ begin
 		until left >= right;
 		writeln;
 		left := oleft;					{restore the left value }
-		top := top + dy;		  			{increment the top point}
+		top := top + dy;		  		{increment the top point}	
 	end
 	until top >= bottom;
 end
