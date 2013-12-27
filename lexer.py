@@ -105,20 +105,13 @@ lexer = lex.lex()
 
 l = lex.lex()
 
-with open("TestCases/testd.le") as myfile:
-    data = "\n".join(line.rstrip() for line in myfile)
-    #i = 0
-    #while i < len(data):
-    #    if data[i] == '{':
-    #        print 'here'
-    #        data = data[:i] + '\n' + data[i:]
-    #        i += 1
-    #    i += 1
+#with open("TestCases/testd.le") as myfile:
+#    data = "\n".join(line.rstrip() for line in myfile)
 
-l.input(data)
-while True:
-    tok = l.token()
-    if not tok:
-        break
-    else:
-        print tok
+#l.input(data)
+#while True:
+#    tok = l.token()
+#    if not tok:
+#        break
+#    else:
+#        print tok
