@@ -9,6 +9,7 @@ import AST
 import os
 
 
+# Parser object structure modified from https://github.com/dabeaz/ply/blob/master/example/newclasscalc/calc.py
 class Parser(object):
     """
     Base class for a lexer/parser that has the rules defined as methods
@@ -36,14 +37,6 @@ class Parser(object):
                   tabmodule=self.tabmodule)
 
     def parse(self, data):
-        #while 1:
-        #    try:
-        #        s = raw_input('calc > ')
-        #        #s = data
-        #    except EOFError:
-        #        break
-        #    if not s: continue
-        #    yacc.parse(s)
         return yacc.parse(data)
 
 
@@ -247,10 +240,6 @@ class ASTGenerator(Parser):
         p[0] = AST.AST('relation', p[1], None, False)
 
 
-    #def p_expression(self, p):
-    #   '''expression : unaryOp term ( ( PLUS | MINUS ) term )*'''
-
-
     def p_expression(self, p):
         '''expression : unaryOp term pomTermStar'''
         # if trace: print 'j'
@@ -264,10 +253,14 @@ class ASTGenerator(Parser):
         p[0] = AST.AST('plusOrMinus', p[1], None, False)
 
     def p_pomTermStar(self, p):
-        '''pomTermStar : pomTermStar plusOrMinus term
+        '''pomTermStar : plusOrMinus term pomTermStar
         | plusOrMinus term
         | empty
         '''
+        #'''pomTermStar : pomTermStar plusOrMinus term
+        #| plusOrMinus term
+        #| empty
+        #'''
         # if trace: print 'l'
         if len(p) > 2:
             p[0] = AST.AST('pomTermStar', None, p[1:], False)
@@ -295,10 +288,14 @@ class ASTGenerator(Parser):
 
 
     def p_tdFactorStar(self, p):
-        '''tdFactorStar : tdFactorStar timesOrDivide factor
+        '''tdFactorStar : timesOrDivide factor tdFactorStar
         | timesOrDivide factor
         | empty
         '''
+        #'''tdFactorStar : tdFactorStar timesOrDivide factor
+        #| timesOrDivide factor
+        #| empty
+        #'''
         # if trace: print 'p'
         if len(p) > 2:
             p[0] = AST.AST('tdFactorStar', None, p[1:], False)
@@ -340,7 +337,7 @@ class ASTGenerator(Parser):
 
     def p_error(self, p):
         if p:
-            print p
+            #print p
             print("Syntax error at '%s'" % p.value)
         else:
             print("Syntax error at EOF")
