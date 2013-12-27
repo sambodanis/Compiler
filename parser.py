@@ -17,7 +17,6 @@ class Parser(object):
     tokens = ()
     precedence = ()
 
-
     def __init__(self, **kw):
         self.debug = kw.get('debug', 0)
         self.names = {}
@@ -285,7 +284,6 @@ class ASTGenerator(Parser):
         | DIVIDE'''
         # if trace: print 'o'
         p[0] = AST.AST('timesOrDivide', p[1], None, False)
-
 
     def p_tdFactorStar(self, p):
         '''tdFactorStar : timesOrDivide factor tdFactorStar

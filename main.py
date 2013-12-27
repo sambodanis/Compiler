@@ -36,8 +36,7 @@ def simplify_ast(ast):
                 else:
                     root = None
             ast.children = children
-        elif ast.type in lift_and_remove_parents:
-        #elif ast.type == 'pomTermStar' or ast.type == 'tdFactorStar' or ast.type == 'unaryOp':
+        elif ast.type in lift_and_remove_parents: # removes unneeded extra transitions
             ast.data = [c.data for c in ast.children if c and c.type in lift_and_remove_types][0]# c.type == 'plusOrMinus' or c.type == 'timesOrDivide')][0]
             ast.children = [c for c in ast.children if c and c.type not in lift_and_remove_types]
     for i, c in enumerate(ast.children):
@@ -49,11 +48,9 @@ def simplify_ast(ast):
         pass
 
 
-
-
-
 def print_ast(ast, write_to_file):
     print 'PrintingAST:Start'
+
     def print_ast_r(astnode, indentation, g, node_carry, h):
         if not astnode:
             return
