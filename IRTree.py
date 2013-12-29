@@ -13,16 +13,17 @@ class irt:
 
     def _gen_statement_ir(self, root, temp_number):
         if root.data[0] == 'writeln':
-                return root.data
+            self.count += 1
+            self._lines.append("writeln")
+            return root.data
         elif root.data[0] == 'write':
             self.count += 1
-            self._lines.append("")
+            #self._lines.append("writeln")
             if len(root.data) > 1:
                # handle string
                 temp = root.data[1]
             else:
                 # handle expression
-                #temp = iter_flatten(self._gen_ir(root.children[0], temp_number + 1))
                 temp = iter_flatten(self._gen_ir(root.children[0], temp_number))
                 #print temp
                 self._lines.append('write ' + temp[-1])
@@ -31,28 +32,34 @@ class irt:
 
     def _gen_unary_op_ir(self, root, temp_number):
         if root.data[0] == '-':
-            self._lines.append(temp(temp_number) + equals() + '-1' + times() + temp(temp_number - 1))
-        else:
-            self._lines.append(temp(temp_number) + equals() + '1' + times() + temp(temp_number - 1))
+            #self._lines.append(temp(temp_number) + equals() + '-1' + times() + temp(temp_number - 1))
+            self._lines.append(temp(temp_number) + equals() + temp(0) + minus() + temp(temp_number - 1))
+        #else:
+        #    self._lines.append(temp(temp_number) + equals() + '1' + times() + temp(temp_number - 1))
         return temp(temp_number)
 
     def _gen_expression_ir(self, root, temp_number):
         if len(root.children) == 1:
-            raise NameError('expression has single child...')
+            if root.children[0].type == 'term':
+                return self._gen_ir(root.children[0], temp_number + 1)
+            return self._gen_ir(root.children[0], temp_number)
         elif len(root.children) == 2:
             if root.children[0].type == 'term':
-                left = self._gen_ir(root.children[0], temp_number)
-                self._lines.append(temp(temp_number) + equals() + left[0])
-                return self._gen_ir(root.children[1], temp_number + 1)
+                if len(root.children[0].children) == 2:
+                    left = self._gen_ir(root.children[0], temp_number + 1)
+                    #self._lines.append(temp(temp_number) + equals() + left[0]) # redundant 'tn = tn'
+                    return self._gen_ir(root.children[1], temp_number + 2)
 
-                #right = self._gen_ir(root.children[1], temp_number+2)
-                #self._lines.append(temp(temp_number) + equals())
+                else:
+
+                    left = self._gen_ir(root.children[0], temp_number)
+                    #self._lines.append(temp(temp_number) + equals() + left[0]) # redundant 'tn = tn'
+                    return self._gen_ir(root.children[1], temp_number + 1)
         elif len(root.children) == 3:
-            left = [self._gen_ir(c, temp_number + i) for i, c in enumerate(root.children[1::-1])] # First two children in reverse order
+            left = [self._gen_ir(c, temp_number + i) for i, c in enumerate(root.children[1::-1])]  # First two children
             right = self._gen_ir(root.children[2], temp_number + 2)
             return temp(temp_number + 2)
-        else:
-            return [self._gen_ir(c, temp_number + i) for i, c in enumerate(root.children[::-1])] #the fancy reverse
+        return [self._gen_ir(c, temp_number + i) for i, c in enumerate(root.children[::-1])]  # Children in Reverse
 
     def _gen_pom_term_star_ir(self, root, temp_number):
         left = temp(temp_number - 1)
@@ -64,42 +71,60 @@ class irt:
             self._lines.append(temp(temp_number) + equals() + left + plus_or_minus(root.data[0]) + left_pseudo[-1])
         return temp(temp_number)
 
+    def _gen_factor_ir(self, root, temp_number):
+        if root.data:
+            self._lines.append(temp(temp_number) + equals() + str(root.data[0]))
+            return temp(temp_number)
+        else:
+            return self._gen_ir(root.children[0], temp_number)
+
+    def _gen_td_factor_star_ir(self, root, temp_number):
+        left = temp(temp_number - 1)
+        left_pseudo = iter_flatten(self._gen_ir(root.children[0], temp_number + 1))
+        if len(root.children) > 1:
+            right = self._gen_ir(root.children[1], temp_number + 2)
+            self._lines.append(temp(temp_number) + equals() + left + times_or_divide(root.data[0]) + right)
+        else:
+            self._lines.append(temp(temp_number) + equals() + left + times_or_divide(root.data[0]) + left_pseudo[-1])
+        return temp(temp_number)
+
     def _gen_ir(self, root, temp_number):
+        #assert '_t-1' not in ''.join(self._lines)
         if root.type == 'program':
             return [self._gen_ir(c, temp_number) for c in root.children]
         elif root.type == 'compoundStatement':
             return [self._gen_ir(c, temp_number) for c in root.children]
         elif root.type == 'statement':
             #print iter_flatten(self._gen_statement_ir(root, temp_number))
+            #if self.count % 2 == 1 and False:
             if self.count == 1:
                 #print (self._gen_statement_ir(root, temp_number))
                 #print self._lines
                 for l in self._lines:
                     print l
-                sys.exit(0)
+                #sys.exit(0)
+                print ''
             return self._gen_statement_ir(root, temp_number)
-
         elif root.type == 'expression':
             return self._gen_expression_ir(root, temp_number)
         elif root.type == 'factor':
-            if root.data:
-                self._lines.append(temp(temp_number) + equals() + str(root.data[0]))
-                return temp(temp_number)
-            else:
-                return self._gen_ir(root.children[0], temp_number)
+            return self._gen_factor_ir(root, temp_number)
         elif root.type == 'unaryOp':
             return self._gen_unary_op_ir(root, temp_number)
         elif root.type == 'term':
-            return [self._gen_ir(c, temp_number) for c in root.children]
+            return [self._gen_ir(c, temp_number + (-1 if (c.type == 'factor' and len(root.children) == 2 and root.children[1].type == 'tdFactorStar') else 0)) for c in root.children]
+            #return [self._gen_ir(c, temp_number) for c in root.children]
         elif root.type == 'pomTermStar':
             return self._gen_pom_term_star_ir(root, temp_number)
-
+        elif root.type == 'tdFactorStar':
+            return self._gen_td_factor_star_ir(root, temp_number)
         return "none"
 
     def generate_irt(self):
         #irt_root = irtree()
-        ir = self._gen_ir(self._ast_root, 0)
-        return ir
+        special_registers = 1 # offset usable registers by number of internally used registers, eg 0 in R0
+        ir = self._gen_ir(self._ast_root, special_registers)
+        return self._lines
 
 
 def equals():
@@ -113,15 +138,23 @@ def temp(n):
 def times():
     return ' * '
 
+def minus():
+    return ' - '
+
+def times_or_divide(t):
+    if t == '*':
+        return ' * '
+    else:
+        return ' / '
+
 def plus_or_minus(t):
     if t == '+':
         return ' + '
     else:
         return ' - '
 
-# how to flatten nested lists of different nesting levels
-# from http://stackoverflow.com/questions/716477/join-list-of-lists-in-python
-
+# How to flatten nested lists of different nesting levels
+# Adapted from http://stackoverflow.com/questions/716477/join-list-of-lists-in-python
 def iter_flatten(root):
     def _iter_flatten(r):
         if isinstance(r, (list, tuple)):

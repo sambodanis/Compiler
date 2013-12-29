@@ -1,7 +1,9 @@
+import CodeGenerator
 import parser
 import AST
 import pydot
 import IRTree
+import json
 
 __author__ = 'sambodanis'
 
@@ -10,20 +12,47 @@ lift_and_remove_parents = ['pomTermStar', 'tdFactorStar', 'unaryOp']
 
 
 def main():
-    with open("TestCases/test1.le") as myfile:
-        data = "\n".join(line.rstrip() for line in myfile)
+    file_num = load_config()['file_num']
+    data = open_file_num(file_num)
     p = parser.ASTGenerator()
     ast = p.parse(data)
     simplify_ast(ast)
     print_ast(ast, True)
     irt_generator = IRTree.irt(ast)
-    irt = irt_generator.generate_irt()
-    print irt
+    ir = irt_generator.generate_irt()
+    write_ir_file_num(file_num, ir)
+    cg = CodeGenerator.CodeGenerator(ir)
+    assembly_code = cg.generate_code()
+    print assembly_code
+    cg.print_assembly_to_file(file_num)
+
+
+
+
+def load_config():
+    with open('config.json', 'r') as in_file:
+        return json.loads(in_file.read())
+
+
+
+def open_file_num(n):
+    with open("TestCases/test" + n + ".le") as my_file:
+        data = "\n".join(line.rstrip() for line in my_file)
+        return data
+
+
+def write_ir_file_num(n, ir):
+    with open('IRCodes/testIR' + n + '.ir', 'w') as out_file:
+        out_file.write("\n".join(ir))
+        #out_file.write('\n')
 
 
 def simplify_ast(ast):
-    if not ast:
-        return
+    try: # remove potentially null children from rules like: A -> B | empty
+        while True:
+            ast.children.remove(None)
+    except:
+        pass
     if ast.children:
         if ast.type == 'compoundStatement':
             root = ast.children[0]
@@ -37,15 +66,11 @@ def simplify_ast(ast):
                     root = None
             ast.children = children
         elif ast.type in lift_and_remove_parents: # removes unneeded extra transitions
-            ast.data = [c.data for c in ast.children if c and c.type in lift_and_remove_types][0]# c.type == 'plusOrMinus' or c.type == 'timesOrDivide')][0]
-            ast.children = [c for c in ast.children if c and c.type not in lift_and_remove_types]
+            ast.data = [c.data for c in ast.children if c.type in lift_and_remove_types][0]# c.type == 'plusOrMinus' or c.type == 'timesOrDivide')][0]
+            ast.children = [c for c in ast.children if c.type not in lift_and_remove_types]
+
     for i, c in enumerate(ast.children):
         simplify_ast(c)
-    try: # remove potentially null children from rules like: A -> B | empty
-        while True:
-            ast.children.remove(None)
-    except:
-        pass
 
 
 def print_ast(ast, write_to_file):
