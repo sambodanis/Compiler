@@ -34,8 +34,8 @@ class irt:
         if root.data[0] == '-':
             #self._lines.append(temp(temp_number) + equals() + '-1' + times() + temp(temp_number - 1))
             self._lines.append(temp(temp_number) + equals() + temp(0) + minus() + temp(temp_number - 1))
-        #else:
-        #    self._lines.append(temp(temp_number) + equals() + '1' + times() + temp(temp_number - 1))
+        else:
+            self._lines.append(temp(temp_number) + equals() + temp(0) + plus() + temp(temp_number - 1))
         return temp(temp_number)
 
     def _gen_expression_ir(self, root, temp_number):
@@ -95,15 +95,12 @@ class irt:
         elif root.type == 'compoundStatement':
             return [self._gen_ir(c, temp_number) for c in root.children]
         elif root.type == 'statement':
-            #print iter_flatten(self._gen_statement_ir(root, temp_number))
             #if self.count % 2 == 1 and False:
-            if self.count == 1:
-                #print (self._gen_statement_ir(root, temp_number))
-                #print self._lines
-                for l in self._lines:
-                    print l
+            #if self.count == 1:
+            #    for l in self._lines:
+            #        print l
                 #sys.exit(0)
-                print ''
+                #print ''
             return self._gen_statement_ir(root, temp_number)
         elif root.type == 'expression':
             return self._gen_expression_ir(root, temp_number)
@@ -138,20 +135,32 @@ def temp(n):
 def times():
     return ' * '
 
+
+def divide():
+    return ' / '
+
+
+def plus():
+    return ' + '
+
+
 def minus():
     return ' - '
 
+
 def times_or_divide(t):
     if t == '*':
-        return ' * '
+        return times()
     else:
-        return ' / '
+        return divide()
+
 
 def plus_or_minus(t):
     if t == '+':
-        return ' + '
+        return plus()
     else:
-        return ' - '
+        return minus()
+
 
 # How to flatten nested lists of different nesting levels
 # Adapted from http://stackoverflow.com/questions/716477/join-list-of-lists-in-python

@@ -24,6 +24,7 @@ def main():
     cg = CodeGenerator.CodeGenerator(ir)
     assembly_code = cg.generate_code()
     print assembly_code
+    print ''
     cg.print_assembly_to_file(file_num)
 
 
