@@ -11,16 +11,18 @@ lift_and_remove_types = ['plusOrMinus', 'timesOrDivide']
 lift_and_remove_parents = ['pomTermStar', 'tdFactorStar', 'unaryOp']
 
 
+
 def main():
     file_num = load_config()['file_num']
     data = open_file_num(file_num)
     p = parser.ASTGenerator()
     ast = p.parse(data)
     simplify_ast(ast)
+    fix_math(ast)
     print_ast(ast, True)
-    irt_generator = IRTree.irt(ast)
-    ir = irt_generator.generate_irt()
-    write_ir_file_num(file_num, ir)
+    #irt_generator = IRTree.irt(ast)
+    #ir = irt_generator.generate_irt()
+    #write_ir_file_num(file_num, ir)
     #cg = CodeGenerator.CodeGenerator(ir)
     #assembly_code = cg.generate_code()
     #print assembly_code
@@ -73,9 +75,40 @@ def simplify_ast(ast):
         elif ast.type in lift_and_remove_parents: # removes unneeded transitions
             ast.data = [c.data for c in ast.children if c.type in lift_and_remove_types][0]
             ast.children = [c for c in ast.children if c.type not in lift_and_remove_types]
-
     for i, c in enumerate(ast.children):
         simplify_ast(c)
+
+
+def fix_math(ast):
+    if ast.type == 'expression':
+        if len(ast.children) == 3:
+            new_ast = AST.AST('negate', ast.children[0].data[0], ast.children[1:2])
+            ast.children[-1].children.insert(0, new_ast)
+            ast.children = [ast.children[2]]
+        elif len(ast.children) == 2 and ast.children[0].type == 'term':
+            ast.children[1].children.insert(0, ast.children[0])
+            ast.children = [ast.children[1]]
+        elif len(ast.children) == 2 and ast.children[1].type == 'term':
+            new_ast = AST.AST('negate', ast.children[0].data[0], [ast.children[1].children[0]])
+            ast.children[1].children.insert(0, new_ast)
+            ast.children[1].children.pop(1)
+            ast.children = [ast.children[1]]
+    elif ast.type == 'pomTermStar':
+        if len(ast.children) == 3:
+            ast.children[2].children.insert(0, ast.children[1])
+            ast.children = [ast.children[0]] + [ast.children[2]]
+    elif ast.type == 'term' and ast.children[-1].type == 'tdFactorStar':
+        if len(ast.children) == 3:
+            print 'term with three children'
+        elif len(ast.children) == 2:
+            ast.children[-1].children.insert(0, ast.children[0])
+            ast.children = [ast.children[-1]]
+    elif ast.type == 'tdFactorStar':
+        if len(ast.children) == 3:
+            ast.children[-1].children.insert(0, ast.children[1])
+            ast.children = [ast.children[0]] + [ast.children[-1]]
+    for c in ast.children:
+        fix_math(c)
 
 
 def print_ast(ast, write_to_file):
@@ -84,24 +117,14 @@ def print_ast(ast, write_to_file):
     def print_ast_r(astnode, indentation, g, node_carry, h):
         if not astnode:
             return
-        #for dat in astnode.data:
-        #    print " " * indentation, dat
-        t = astnode.type
-        if t == 'relation' or t == 'unaryOp' or t == 'statement' or t == 'expression' or \
-                        t == 'expression' or t == 'term' or t == 'factor':
-            indentation += 1
-        else:
-            indentation += 1
         source = h[0]
         for c in astnode.children:
             h[0] += 1
             if c:
                 if node_carry:
                     if c.data:
-                        #print 'd', c.type
                         g.add_node(pydot.Node(str(h[0]), label=(str(c.type) + ' -> ' + str(c.data))))
                     else:
-                        #print 'nd', c.type
                         g.add_node(pydot.Node(str(h[0]), label=str(c.type)))
                     g.add_edge(pydot.Edge(str(source), str(h[0])))
                 node_carry = str(h[0])
