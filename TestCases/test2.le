@@ -1,9 +1,12 @@
 {test4: program to test assignment and variables.}
 {Already tested: write statements and constants.}
 begin
-  i := 10023.0;
+  i := 10023.0 + 2.0;
   write(i);
   writeln;
+  {i := 10023.0;
+  write(i);
+  writeln;}
   a := i;
   write(a);
   writeln;

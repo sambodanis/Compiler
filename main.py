@@ -21,11 +21,11 @@ def main():
     irt_generator = IRTree.irt(ast)
     ir = irt_generator.generate_irt()
     write_ir_file_num(file_num, ir)
-    cg = CodeGenerator.CodeGenerator(ir)
-    assembly_code = cg.generate_code()
-    print assembly_code
-    print ''
-    cg.print_assembly_to_file(file_num)
+    #cg = CodeGenerator.CodeGenerator(ir)
+    #assembly_code = cg.generate_code()
+    #print assembly_code
+    #print ''
+    #cg.print_assembly_to_file(file_num)
 
 
 
@@ -48,6 +48,10 @@ def write_ir_file_num(n, ir):
         #out_file.write('\n')
 
 
+# simplifies the AST by simplifying it and removing unneeded stuff
+# eg transitions like A -> x -> -> y -> z -> data we actually want where xyz
+# hold no important data
+# Also removes any null nodes from the AST
 def simplify_ast(ast):
     try: # remove potentially null children from rules like: A -> B | empty
         while True:
@@ -66,8 +70,8 @@ def simplify_ast(ast):
                 else:
                     root = None
             ast.children = children
-        elif ast.type in lift_and_remove_parents: # removes unneeded extra transitions
-            ast.data = [c.data for c in ast.children if c.type in lift_and_remove_types][0]# c.type == 'plusOrMinus' or c.type == 'timesOrDivide')][0]
+        elif ast.type in lift_and_remove_parents: # removes unneeded transitions
+            ast.data = [c.data for c in ast.children if c.type in lift_and_remove_types][0]
             ast.children = [c for c in ast.children if c.type not in lift_and_remove_types]
 
     for i, c in enumerate(ast.children):

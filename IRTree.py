@@ -3,6 +3,7 @@ import sys
 
 __author__ = 'sambodanis'
 
+debug = False
 
 class irt:
 
@@ -28,6 +29,13 @@ class irt:
                 #print temp
                 self._lines.append('write ' + temp[-1])
             return temp
+        elif root.data[0] == ':=':
+            val = iter_flatten([self._gen_ir(root.children[1], temp_number)])
+            var = self._gen_ir(root.children[0], temp_number)
+            print val, var
+            self._lines.append(var + equals() + val[0])
+            #print 'v,v', val, var
+            #print 'h', var + equals() + val
         return "none"
 
     def _gen_unary_op_ir(self, root, temp_number):
@@ -37,6 +45,9 @@ class irt:
         else:
             self._lines.append(temp(temp_number) + equals() + temp(0) + plus() + temp(temp_number - 1))
         return temp(temp_number)
+
+    def _gen_term_ir(self, root, temp_number):
+        return [self._gen_ir(c, temp_number + (-1 if (c.type == 'factor' and len(root.children) == 2 and root.children[1].type == 'tdFactorStar') else 0)) for c in root.children]
 
     def _gen_expression_ir(self, root, temp_number):
         if len(root.children) == 1:
@@ -49,9 +60,7 @@ class irt:
                     left = self._gen_ir(root.children[0], temp_number + 1)
                     #self._lines.append(temp(temp_number) + equals() + left[0]) # redundant 'tn = tn'
                     return self._gen_ir(root.children[1], temp_number + 2)
-
                 else:
-
                     left = self._gen_ir(root.children[0], temp_number)
                     #self._lines.append(temp(temp_number) + equals() + left[0]) # redundant 'tn = tn'
                     return self._gen_ir(root.children[1], temp_number + 1)
@@ -88,7 +97,14 @@ class irt:
             self._lines.append(temp(temp_number) + equals() + left + times_or_divide(root.data[0]) + left_pseudo[-1])
         return temp(temp_number)
 
+    def _gen_variable_ir(self, root, temp_number):
+        #self._lines.append(temp(temp_number) + equals() + root.data[0])
+        #return temp(temp_number)
+        return root.data[0]
+
     def _gen_ir(self, root, temp_number):
+        if debug:
+            self._lines += [root.type]
         #assert '_t-1' not in ''.join(self._lines)
         if root.type == 'program':
             return [self._gen_ir(c, temp_number) for c in root.children]
@@ -96,10 +112,10 @@ class irt:
             return [self._gen_ir(c, temp_number) for c in root.children]
         elif root.type == 'statement':
             #if self.count % 2 == 1 and False:
-            #if self.count == 1:
+            #if self.count == 2:
             #    for l in self._lines:
             #        print l
-                #sys.exit(0)
+            #    sys.exit(0)
                 #print ''
             return self._gen_statement_ir(root, temp_number)
         elif root.type == 'expression':
@@ -109,12 +125,15 @@ class irt:
         elif root.type == 'unaryOp':
             return self._gen_unary_op_ir(root, temp_number)
         elif root.type == 'term':
-            return [self._gen_ir(c, temp_number + (-1 if (c.type == 'factor' and len(root.children) == 2 and root.children[1].type == 'tdFactorStar') else 0)) for c in root.children]
+            return self._gen_term_ir(root, temp_number)
+            #return [self._gen_ir(c, temp_number + (-1 if (c.type == 'factor' and len(root.children) == 2 and root.children[1].type == 'tdFactorStar') else 0)) for c in root.children]
             #return [self._gen_ir(c, temp_number) for c in root.children]
         elif root.type == 'pomTermStar':
             return self._gen_pom_term_star_ir(root, temp_number)
         elif root.type == 'tdFactorStar':
             return self._gen_td_factor_star_ir(root, temp_number)
+        elif root.type == 'variable':
+            return self._gen_variable_ir(root, temp_number)
         return "none"
 
     def generate_irt(self):
