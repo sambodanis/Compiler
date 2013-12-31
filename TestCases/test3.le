@@ -2,8 +2,8 @@
 {Already tested: assignment, write statements, variables, and constants.}
 begin
   write('Enter a number: ');
-  {read(i);
-  write('Enter a number: ');
+  read(i);
+  {write('Enter a number: ');
   read(x);
   write('First is ');
   write(i);

@@ -9,10 +9,22 @@ class CodeGenerator:
 
     def __init__(self, ir):
         self._lines = ir
-        self._variable_map = {}
         self._reserved_words = {'write', 'writeln', 'writes'}
+            # Determine the top register and then iterate through all lines and allocate a specific register to
+    # every variable
+
+        # Filter the list of all strings in the IR to only contain temps
+        # Sort those temps by their number and pick the largest.
+        top_register = int(
+            sorted([x for line in self._lines for x in line
+                    if x[0] == '_'], key=lambda t: int(t[2:]))[-1][2:])
+        # Counter that increments by 1 with every call
+        count = lambda c=itertools.count(top_register + 1): next(c)
+        #
+        self._variable_map = {line[0]: 'R' + str(count())
+                              for line in self._lines if line[0][0] != '_'
+                              and line[0] not in self._reserved_words}
         self._string_map = {line[0]: 0 for line in self._lines if self._is_string(line)}
-        print self._string_map
         self._assembly = []
         self._assembly.append('MOVIR R0 0.0')
         self._assembly.append('DATA 10')
@@ -20,19 +32,12 @@ class CodeGenerator:
         self._PC = 2
 
     def generate_code(self):
-
-        # Append to not delete default registers
-        self._give_variables_registers()
-        #variable_change_idx = []
-        #var_map_size = len(self._variable_map)
         for i, line in enumerate(self._lines):
             if line:
                 assembly_for_line = self._code_for_line(self._temps_to_registers(line))
                 self._assembly.append(assembly_for_line)
         self._assembly.append("HALT")
-        #self._variables_to_registers()
-        #print variable_change_idx
-        #print self._variable_map
+
         return self._assembly
 
     def print_assembly_to_file(self, n):
@@ -104,19 +109,3 @@ class CodeGenerator:
                         new_line[j] = self._variable_map[var]
                         #print 'a', new_line
                 self._assembly[i] = ' '.join(new_line)
-
-    # Determine the top register and then iterate through all lines and allocate a specific register to
-    # every variable
-    def _give_variables_registers(self):
-        # Filter the list of all strings in the IR to only contain temps
-        # Sort those temps by their number and pick the largest.
-        top_register = int(
-            sorted([x for line in self._lines for x in line
-                    if x[0] == '_'], key=lambda t: int(t[2:]))[-1][2:])
-
-        # Counter that increments by 1 with every call
-        count = lambda c=itertools.count(top_register + 1): next(c)
-        #
-        self._variable_map = {line[0]: 'R' + str(count())
-                              for line in self._lines if line[0][0] != '_'
-                              and line[0] not in self._reserved_words}
