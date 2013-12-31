@@ -1,19 +1,26 @@
 {test4: program to test assignment and variables.}
 {Already tested: write statements and constants.}
 begin
-  i := 10023.0 + 2.0;
+  i := 1.0;
+  j := 2.0;
+  k := 3.0;
+  l := 1.0 + 2.0;
+  l := i * (j + k);
+  write(l);
+  writeln;
+  {write(1.0*2.0*3.0);}
+  write(i + j + k);
+  writeln;
+  i := 10023.0;
   write(i);
   writeln;
-  {i := 10023.0;
-  write(i);
-  writeln;}
   a := i;
   write(a);
   writeln;
   j := 76.5;
   write(j);
   writeln;
-  a := j;
+  a := j * i;
   write(a);
   writeln;
 end

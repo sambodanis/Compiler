@@ -11,7 +11,6 @@ lift_and_remove_types = ['plusOrMinus', 'timesOrDivide']
 lift_and_remove_parents = ['pomTermStar', 'tdFactorStar', 'unaryOp']
 
 
-
 def main():
     file_num = load_config()['file_num']
     data = open_file_num(file_num)
@@ -20,22 +19,21 @@ def main():
     simplify_ast(ast)
     fix_math(ast)
     print_ast(ast, True)
-    #irt_generator = IRTree.irt(ast)
-    #ir = irt_generator.generate_irt()
-    #write_ir_file_num(file_num, ir)
-    #cg = CodeGenerator.CodeGenerator(ir)
-    #assembly_code = cg.generate_code()
-    #print assembly_code
-    #print ''
-    #cg.print_assembly_to_file(file_num)
-
-
+    irt_generator = IRTree.irt(ast)
+    ir = irt_generator.generate_irt()
+    for line in ir:
+        print ' '.join(line)
+    write_ir_file_num(file_num, ir)
+    cg = CodeGenerator.CodeGenerator(ir)
+    assembly_code = cg.generate_code()
+    print assembly_code
+    print ''
+    cg.print_assembly_to_file(file_num)
 
 
 def load_config():
     with open('config.json', 'r') as in_file:
         return json.loads(in_file.read())
-
 
 
 def open_file_num(n):
@@ -46,7 +44,7 @@ def open_file_num(n):
 
 def write_ir_file_num(n, ir):
     with open('IRCodes/testIR' + n + '.ir', 'w') as out_file:
-        out_file.write("\n".join(ir))
+        out_file.write("\n".join([''.join(line) for line in ir]))
         #out_file.write('\n')
 
 
@@ -79,6 +77,10 @@ def simplify_ast(ast):
         simplify_ast(c)
 
 
+# Fixes mathematical nodes so that all information required to evaluate
+# them is in their children. Also simplifies negation.
+# Basically implemented as a bunch of tree rotations
+#TODO: Check if similar stuff would be helpful for conditionals
 def fix_math(ast):
     if ast.type == 'expression':
         if len(ast.children) == 3:
