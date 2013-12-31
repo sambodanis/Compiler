@@ -34,7 +34,9 @@ class irt:
             var = self._gen_ir(root.children[0], temp_number)
             self._lines.append([var, equals(), val[0]])
         elif root.data[0] == 'read':
-            pass
+            var = self._gen_ir(root.children[0], temp_number)
+            self._lines.append([var, equals(), temp(temp_number)])
+            self._lines.append(['read', var])
 
         return "none"
 

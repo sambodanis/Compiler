@@ -44,7 +44,7 @@ def open_file_num(n):
 
 def write_ir_file_num(n, ir):
     with open('IRCodes/testIR' + n + '.ir', 'w') as out_file:
-        out_file.write("\n".join([''.join(line) for line in ir]))
+        out_file.write("\n".join([' '.join(line) for line in ir]))
         #out_file.write('\n')
 
 

@@ -9,7 +9,7 @@ class CodeGenerator:
 
     def __init__(self, ir):
         self._lines = ir
-        self._reserved_words = {'write', 'writeln', 'writes'}
+        self._reserved_words = {'write', 'writeln', 'writes', 'read'}
             # Determine the top register and then iterate through all lines and allocate a specific register to
     # every variable
 
@@ -24,6 +24,7 @@ class CodeGenerator:
         self._variable_map = {line[0]: 'R' + str(count())
                               for line in self._lines if line[0][0] != '_'
                               and line[0] not in self._reserved_words}
+        print self._variable_map
         self._string_map = {line[0]: 0 for line in self._lines if self._is_string(line)}
         self._assembly = []
         self._assembly.append('MOVIR R0 0.0')
@@ -46,12 +47,13 @@ class CodeGenerator:
             out_file.write('\n')
 
     def _code_for_line(self, line):
-        #print line
         code = ''
         for i, v in enumerate(line):  # Swap any variables with their temporary register value
             if v in self._variable_map:
                 line[i] = self._variable_map[v]
-        if '+' in line:
+        if 'read' in line:
+            code = ' '.join(['RDR', line[1]])
+        elif '+' in line:
             code = ' '.join(['ADDR', line[0], line[2], line[4]])
         elif '-' in line:
             code = ' '.join(['SUBR', line[0], line[2], line[4]])
@@ -63,7 +65,7 @@ class CodeGenerator:
             code = ' '.join(['WRR', line[1]])
         elif len(line) == 3 and line[1] == '=' and not self._is_string(line):
             if line[0][0] == 'R' and line[2][0] == 'R':
-                code = ' '.join(['ADDR', line[0], 'R0',  line[2]])
+                code = ' '.join(['ADDR', line[0], 'R0', line[2]])
             else:
                 code = ' '.join(['MOVIR', line[0], line[2]])
         elif line[0] == 'writeln':
@@ -72,7 +74,7 @@ class CodeGenerator:
             code = ' '.join(['WRS', self._string_map[line[1]]])
         elif self._is_string(line):
             curr_pc = self._PC
-            for letter in line[2]:
+            for letter in line[2][1:-1]:
                 self._assembly.append(' '.join(['DATA', str(ord(letter))]))
                 self._inc_pc()
             self._assembly.append(' '.join(['DATA', '0']))
