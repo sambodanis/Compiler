@@ -21,6 +21,7 @@ def main():
     print_ast(ast, True)
     irt_generator = IRTree.irt(ast)
     ir = irt_generator.generate_irt()
+    print ir
     for line in ir:
         print ' '.join(line)
     write_ir_file_num(file_num, ir)
@@ -109,6 +110,14 @@ def fix_math(ast):
         if len(ast.children) == 3:
             ast.children[-1].children.insert(0, ast.children[1])
             ast.children = [ast.children[0]] + [ast.children[-1]]
+    elif ast.type == 'statement' and ast.data[0] == 'if':
+        if len(ast.children) == 4:
+            ast.children[1].children = [ast.children[0], ast.children[2]]
+            ast.children = [ast.children[1], ast.children[3]]
+        elif len(ast.children) == 5:
+            ast.children[1].children = [ast.children[0], ast.children[2]]
+            ast.children = [ast.children[1], ast.children[3], ast.children[4]]
+
     for c in ast.children:
         fix_math(c)
 

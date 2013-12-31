@@ -5,7 +5,7 @@ begin
   if 2.0 > 3.0 begin write(2.0); end;
   if 4.0 = 4.0 begin write(3.0); writeln; end
   else begin write(4.0); writeln; end;
-  if 5.0 != 5.0 begin write(5.0); writeln; writeln; end
+  if 5.0 = 5.0 begin write(5.0); writeln; writeln; end
   else begin write(6.0); writeln; writeln; end;
   if 6.0 <= 7.0 begin write(7.0); end
   else begin end;

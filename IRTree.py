@@ -11,6 +11,7 @@ class irt:
         self._ast_root = ast
         self._lines = []
         self.count = 0
+        self._label_num = 0
 
     def _gen_statement_ir(self, root, temp_number):
         if root.data[0] == 'writeln':
@@ -37,6 +38,48 @@ class irt:
             var = self._gen_ir(root.children[0], temp_number)
             self._lines.append([var, equals(), temp(temp_number)])
             self._lines.append(['read', var])
+        elif root.data[0] == 'if':
+            # Keeping all this commented out stuff around because logical operators extn?
+            #if root.children[0].data[0] in ['>', '<=']:
+            #    print root.children[0].data[0]
+            #    t = root.children[0].data[0]
+            #    root.children[0].data[0] = '<' if t == '<=' else '>='
+            #    condition = self._gen_ir(root.children[0], temp_number)
+            #    root.children[0].data[0] = t
+            #else:
+            #    condition = self._gen_ir(root.children[0], temp_number)
+            condition = self._gen_ir(root.children[0], temp_number)
+            true_label = label(self._label_num)
+            self._label_num += 1
+            end_label = label(self._label_num)
+            self._label_num += 1
+            #if root.children[0].data[0] == '>':
+            #    intermediate_label = label(self._label_num)
+            #    self._label_num += 1
+
+            #self._lines.append(['ifZ', condition, 'Goto', true_label if root.children[0].data[0] != '>' else intermediate_label])
+            self._lines.append(['ifZ', condition, 'Goto', true_label])
+            # <= --> < || ==
+            #if root.children[0].data[0] == '<=':
+            #    root.children[0].data = ['==']
+            #    condition = self._gen_ir(root.children[0], temp_number)
+            #    self._lines.append(['ifZ', condition, 'Goto', true_label])
+
+            self._gen_ir(root.children[2], temp_number) if len(root.children) == 3 else None
+            self._lines.append(['Goto', end_label])
+            #if root.children[0].data[0] == '>':
+            #    self._lines.append([intermediate_label])
+
+            # > --> >= && !=
+            #if root.children[0].data[0] == '>':
+            #    root.children[0].data = ['!=']
+            #    condition = self._gen_ir(root.children[0], temp_number)
+            #    self._lines.append(['ifZ', condition, 'Goto', true_label])
+            #    self._lines.append(['Goto', end_label])
+
+            self._lines.append([true_label])
+            self._gen_ir(root.children[1], temp_number)
+            self._lines.append([end_label])
 
         return "none"
 
@@ -83,6 +126,16 @@ class irt:
         else:
             return iter_flatten(self._gen_ir(root.children[0], temp_number))[0]
 
+    def _gen_relation_ir(self, root, temp_number):
+        pass
+        left = iter_flatten(self._gen_ir(root.children[0], temp_number + 1))[0]
+        right = iter_flatten(self._gen_ir(root.children[1], temp_number + 2))[0]
+        self._lines.append([temp(temp_number), equals(), left, root.data[0] if root.data[0] != '=' else '==', right])
+        return temp(temp_number)
+
+    def _gen_lpElseCompoundStatementRp_ir(self, root, temp_number):
+        return self._gen_ir(root.children[0], temp_number)
+
     def _gen_ir(self, root, temp_number):
         if debug:
             self._lines += [root.type]
@@ -123,6 +176,10 @@ class irt:
             return self._gen_variable_ir(root, temp_number)
         elif root.type == 'negate':
             return self._gen_negate_ir(root, temp_number)
+        elif root.type == 'relation':
+            return self._gen_relation_ir(root, temp_number)
+        elif root.type == 'lpElseCompoundStatementRp':
+            return self._gen_lpElseCompoundStatementRp_ir(root, temp_number)
         return "none"
 
     def generate_irt(self):
@@ -137,6 +194,10 @@ def equals():
 
 def temp(n):
     return '_t' + str(n)
+
+
+def label(n):
+    return '~L' + str(n)
 
 
 def times():
