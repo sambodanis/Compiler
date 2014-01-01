@@ -7,6 +7,7 @@ debug = False
 
 
 class irt:
+
     def __init__(self, ast):
         self._ast_root = ast
         self._lines = []
@@ -80,6 +81,17 @@ class irt:
             self._lines.append([true_label])
             self._gen_ir(root.children[1], temp_number)
             self._lines.append([end_label])
+        elif root.data[0] == 'repeat':
+            #root.children[1].data[0] = self._inverted_conditions[]
+            start_label = label(self._label_num)
+            self._label_num += 1
+            #end_label = label(self._label_num)
+            #self._label_num += 1
+            self._lines.append([start_label])
+            self._gen_ir(root.children[0], temp_number)
+            condition = self._gen_ir(root.children[1], temp_number)
+            self._lines.append(['ifZ', condition, 'Goto', start_label])
+
 
         return "none"
 

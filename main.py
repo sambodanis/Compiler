@@ -9,6 +9,7 @@ __author__ = 'sambodanis'
 
 lift_and_remove_types = ['plusOrMinus', 'timesOrDivide']
 lift_and_remove_parents = ['pomTermStar', 'tdFactorStar', 'unaryOp']
+inverted_conditions = {'<': '>=', '>': '<=', '>=': '<', '<=': '>', '=': '!=', '!=': '='}
 
 
 def main():
@@ -81,7 +82,7 @@ def simplify_ast(ast):
 # Fixes mathematical nodes so that all information required to evaluate
 # them is in their children. Also simplifies negation.
 # Basically implemented as a bunch of tree rotations
-#TODO: Check if similar stuff would be helpful for conditionals
+# Does similar thing for all relations
 def fix_math(ast):
     if ast.type == 'expression':
         if len(ast.children) == 3:
@@ -117,7 +118,10 @@ def fix_math(ast):
         elif len(ast.children) == 5:
             ast.children[1].children = [ast.children[0], ast.children[2]]
             ast.children = [ast.children[1], ast.children[3], ast.children[4]]
-
+    elif ast.type == 'statement' and ast.data[0] == 'repeat':
+        ast.children[2].data[0] = inverted_conditions[ast.children[2].data[0]]
+        ast.children[2].children = [ast.children[1], ast.children[3]]
+        ast.children = [ast.children[0], ast.children[2]]
     for c in ast.children:
         fix_math(c)
 
