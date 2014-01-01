@@ -158,7 +158,7 @@ class ASTGenerator(Parser):
         '''
         # if trace: print 'c'
         if len(p) > 2:
-            print p[2].data
+            #print p[2].data
             p[0] = AST.AST('programFront', None, [p[2], p[3]], False)
 
 
@@ -313,11 +313,10 @@ class ASTGenerator(Parser):
         else:
             p[0] = AST.AST('factor', None, p[2], False)
 
-
     def p_variable(self, p):
         '''variable : ID bracketedExpressionStar'''
         # if trace: print 'r'
-        p[0] = AST.AST('variable', p[1], None, True)
+        p[0] = AST.AST('variable', p[1], p[2], True)
 
     def p_bracketedExpressionStar(self, p):
         '''bracketedExpressionStar : LSBRACKET expression RSBRACKET

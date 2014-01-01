@@ -2,7 +2,23 @@
 {Already tested: write statements and constants.}
 {Note: need to use the "-j" option of assmule to prevent infinite loops.}
 begin
-  repeat begin write(1.0); end until 1.0 >= 2.0;
+  i := 0.0;
+  c_end := 5.0;
+  repeat begin 
+    j := 0.0;
+    repeat begin
+      {write(i);
+      write(',');
+      write(j);}
+      write('helloooo ');
+      j := j + 1.0;
+    end until j = c_end;
+    i := i + 1.0;
+    writeln;
+    write('thur ');
+  end until i = c_end;
+
+  {repeat begin write(1.0); end until 1.0 >= 2.0;
   repeat begin write(2.0); end until 2.0 <= 3.0;
   repeat begin write(3.0); writeln; end until 4.0 != 4.0;
   repeat begin write(5.0); writeln; writeln; end until 5.0 = 5.0;
@@ -15,5 +31,5 @@ begin
   begin
     repeat begin write('c'); end until 0.7 > 0.8;
     repeat begin write('d'); end until 0.9 < 1.0e-1;
-  end until 0.5 = 6.0;
+  end until 0.5 = 6.0;}
 end

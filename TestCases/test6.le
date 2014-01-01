@@ -5,7 +5,8 @@ begin
 	fib[0.0] := 1.0;
 	fib[1.0] := 1.0;
 	i := 2.0;
-	repeat
+	fib[i] := fib[i-2.0] + fib[i-1.0];
+	{repeat
 	begin
 		fib[i] := fib[i-2.0] + fib[i-1.0];
 		i := i + 1.0;
@@ -27,5 +28,5 @@ begin
 	end
 	until i = 10.0;
 	write(sum);
-	writeln;
+	writeln;}
 end

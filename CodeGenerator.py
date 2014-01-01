@@ -94,7 +94,7 @@ class CodeGenerator:
         elif self._is_string(line):
             curr_pc = self._PC
             for letter in line[2][1:-1]:
-                self._assembly.append(' '.join(['DATA', str(ord(letter))]))
+                self._assembly.append(' '.join(['DATA', str(ord(letter)), ';', str(self._PC)]))
                 self._inc_pc()
             self._assembly.append(' '.join(['DATA', '0']))
             self._inc_pc()
