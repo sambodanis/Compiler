@@ -1,55 +1,56 @@
 MOVIR R0 0.0
 DATA 10
 DATA 0
-MOVIR R2 1.0
-WRR R2
-WRS 0
-MOVIR R1 5.0
-SUBR R2 R0 R1
-WRR R2
-WRS 0
-MOVIR R1 4.0
-ADDR R2 R0 R1
-MOVIR R4 3.0
-ADDR R3 R2 R4
-WRR R3
-WRS 0
-MOVIR R1 1.0
-MOVIR R2 2.0
-MOVIR R4 6.0
-SUBR R5 R0 R4
-MULR R3 R2 R5
-MOVIR R4 20.0
-MOVIR R6 4.0
-DIVR R5 R4 R6
-SUBR R4 R3 R5
-ADDR R2 R1 R4
-WRR R2
-WRS 0
-MOVIR R1 0.5
-SUBR R2 R0 R1
-WRR R2
-WRS 0
-MOVIR R1 0.4
-SUBR R2 R0 R1
-MOVIR R4 0.3
-SUBR R3 R2 R4
-WRR R3
-WRS 0
-MOVIR R1 0.1
-MOVIR R3 0.25
-MOVIR R5 0.05
-ADDR R4 R3 R5
-DIVR R2 R1 R4
-MOVIR R3 0.2
-MOVIR R5 6.0
-SUBR R6 R0 R5
-MULR R4 R3 R6
-MOVIR R5 0.2
-MOVIR R7 0.4
-DIVR R6 R5 R7
-SUBR R5 R4 R6
-ADDR R3 R2 R5
-WRR R3
-WRS 0
+MOVIR R2 2.0 ; _t2 = 2.0
+MOVIR R3 1.0 ; _t3 = 1.0
+MULR R1 R2 R3 ; _t1 = _t2 * _t3
+WRR R1 ; write _t1
+WRS 0 ; writeln
+MOVIR R2 5.0 ; _t2 = 5.0
+SUBR R1 R0 R2 ; _t1 = _t0 - _t2
+WRR R1 ; write _t1
+WRS 0 ; writeln
+MOVIR R2 4.0 ; _t2 = 4.0
+MOVIR R3 3.0 ; _t3 = 3.0
+ADDR R1 R2 R3 ; _t1 = _t2 + _t3
+WRR R1 ; write _t1
+WRS 0 ; writeln
+MOVIR R2 1.0 ; _t2 = 1.0
+MOVIR R5 2.0 ; _t5 = 2.0
+MOVIR R7 6.0 ; _t7 = 6.0
+SUBR R6 R0 R7 ; _t6 = _t0 - _t7
+MULR R4 R5 R6 ; _t4 = _t5 * _t6
+MOVIR R6 20.0 ; _t6 = 20.0
+MOVIR R7 4.0 ; _t7 = 4.0
+DIVR R5 R6 R7 ; _t5 = _t6 / _t7
+SUBR R3 R4 R5 ; _t3 = _t4 - _t5
+ADDR R1 R2 R3 ; _t1 = _t2 + _t3
+WRR R1 ; write _t1
+WRS 0 ; writeln
+MOVIR R2 0.5 ; _t2 = 0.5
+SUBR R1 R0 R2 ; _t1 = _t0 - _t2
+WRR R1 ; write _t1
+WRS 0 ; writeln
+MOVIR R3 0.4 ; _t3 = 0.4
+SUBR R2 R0 R3 ; _t2 = _t0 - _t3
+MOVIR R3 0.3 ; _t3 = 0.3
+SUBR R1 R2 R3 ; _t1 = _t2 - _t3
+WRR R1 ; write _t1
+WRS 0 ; writeln
+MOVIR R3 0.1 ; _t3 = 0.1
+MOVIR R5 0.25 ; _t5 = 0.25
+MOVIR R6 0.05 ; _t6 = 0.05
+ADDR R4 R5 R6 ; _t4 = _t5 + _t6
+DIVR R2 R3 R4 ; _t2 = _t3 / _t4
+MOVIR R5 0.2 ; _t5 = 0.2
+MOVIR R7 6.0 ; _t7 = 6.0
+SUBR R6 R0 R7 ; _t6 = _t0 - _t7
+MULR R4 R5 R6 ; _t4 = _t5 * _t6
+MOVIR R6 0.2 ; _t6 = 0.2
+MOVIR R7 0.4 ; _t7 = 0.4
+DIVR R5 R6 R7 ; _t5 = _t6 / _t7
+SUBR R3 R4 R5 ; _t3 = _t4 - _t5
+ADDR R1 R2 R3 ; _t1 = _t2 + _t3
+WRR R1 ; write _t1
+WRS 0 ; writeln
 HALT

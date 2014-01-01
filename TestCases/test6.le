@@ -1,13 +1,23 @@
 {arrays test program}
 
-array sq[10.0], fib[10.0], gh[5.0];
+array sq[10.0], fib[10.0];
 begin
-	i := 2.0;
-	{fib[0.0] := 1.0;
+	{
+	fib[0.0] := 5.0;
+	sq[0.0] := 6.0;
+	i := fib[0.0] + sq[0.0];
+	write(i);
+	writeln;}
+	{write(fib[-1.0 + 1.0]);
+	writeln;
+	sq[fib[0.0]] := 1.0;
+	write(sq[5.0]);
+	writeln;}
+
+	fib[0.0] := 1.0;
 	fib[1.0] := 1.0;
 	i := 2.0;
-	fib[i] := fib[i-2.0] + fib[i-1.0];}
-	{repeat
+	repeat
 	begin
 		fib[i] := fib[i-2.0] + fib[i-1.0];
 		i := i + 1.0;
@@ -29,5 +39,5 @@ begin
 	end
 	until i = 10.0;
 	write(sum);
-	writeln;}
+	writeln;
 end

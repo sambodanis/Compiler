@@ -22,15 +22,15 @@ def main():
     print_ast(ast, True)
     irt_generator = IRTree.irt(ast)
     ir = irt_generator.generate_irt()
-    #print ir
-    #for line in ir:
-    #    print ' '.join(line)
+    for line in ir:
+        print ' '.join(line)
     write_ir_file_num(file_num, ir)
     cg = CodeGenerator.CodeGenerator(ir)
     assembly_code = cg.generate_code()
     print assembly_code
     print ''
     cg.print_assembly_to_file(file_num)
+
 
 
 def load_config():
@@ -132,6 +132,13 @@ def fix_math(ast):
                     break
                 next_node = next_node.children[1]
             ast.children = [ast.children[0]] + new_children
+    elif ast.type == 'bracketedExpressionStar':
+        f = AST.AST('factor', ['4.0'], [])
+        g = AST.AST('factor', [], ast.children[0])
+        new_sub = AST.AST('tdFactorStar', ['*'], [f, g])
+        j = AST.AST('term', [], new_sub)
+        h = AST.AST('expression', [], j)
+        ast.children = [h]
     for c in ast.children:
         fix_math(c)
 
