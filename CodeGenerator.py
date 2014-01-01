@@ -12,7 +12,7 @@ class CodeGenerator:
     def __init__(self, ir):
         self._lines = ir
         self._conditions = {'<', '>', '<=', '>=', '!=', '=='}
-        self._reserved_words = {'write', 'writeln', 'writes', 'read', 'Goto', 'ifZ'} | self._conditions
+        self._reserved_words = {'write', 'writeln', 'writes', 'read', 'Goto', 'ifZ', 'Alloc'} | self._conditions
         # Determine the top register and then iterate through all lines and allocate a specific register to
         # every variable
 
@@ -24,15 +24,19 @@ class CodeGenerator:
         # Counter that increments by 1 with every call
         count = lambda c=itertools.count(top_register + 1): next(c)
         #
-        self._variable_map = {line[0]: 'R' + str(count())
+        self._variable_map = {line[0]: ['R' + str(count())]
                               for line in self._lines if line[0][0] not in ['_', '~']
         and line[0] not in self._reserved_words}
         self._string_map = {line[0]: 0 for line in self._lines if self._is_string(line)}
+
+        #self._array_map = {}
         self._assembly = []
         self._assembly.append('MOVIR R0 0.0')
         self._assembly.append('DATA 10')
         self._assembly.append('DATA 0')
         self._last_condition = (None, None)
+        self._last_array_c = -1
+        self._arrays = {}
         self._PC = 2
 
     def generate_code(self):
@@ -43,7 +47,8 @@ class CodeGenerator:
             else:
                 print 'why no line?'
         self._assembly.append("HALT")
-
+        print 'v', self._string_map
+        print 'v', self._variable_map
         return self._assembly
 
     def print_assembly_to_file(self, n):
@@ -55,9 +60,22 @@ class CodeGenerator:
         code = ''
         for i, v in enumerate(line):  # Swap any variables with their temporary register value
             if v in self._variable_map:
-                line[i] = self._variable_map[v]
+                line[i] = self._variable_map[v][0]
         if 'read' in line:
             code = ['RDR', line[1]]
+        elif len(line) == 4 and line[2] == 'Alloc':
+            if self._PC % 4 != 0:
+                for i in range(4 - (self._PC % 4)):
+                    self._assembly.append(' '.join(['DATA', '0']))
+                    self._inc_pc()
+            # Set counter for current var
+            self._last_array_c = self._PC
+            for i in range(int(line[3])):
+                for j in range(4):
+                    self._assembly.append(' '.join(['DATA', '0']))
+                    self._inc_pc()
+            #self._arrays |=
+            print line
         elif self._is_label(line):
             code = [self._label_from_label(line)]
         elif line[0] == 'ifZ':
@@ -85,6 +103,9 @@ class CodeGenerator:
         elif len(line) == 3 and line[1] == '=' and not self._is_string(line):
             if line[0][0] == 'R' and line[2][0] == 'R':
                 code = ['ADDR', line[0], 'R0', line[2]]
+                if self._last_array_c:
+                    filter(lambda x: x[0] == line[0], self._variable_map.values())[0].append(self._last_array_c)
+                    self._last_array_c = None
             else:
                 code = ['MOVIR', line[0], line[2]]
         elif line[0] == 'writeln':
@@ -133,16 +154,16 @@ class CodeGenerator:
     def _inc_pc(self):
         self._PC += 1
 
-    def _variables_to_registers(self):
-        for i in range(2):
-            for i, line in enumerate(self._assembly):
-                new_line = line.split()
-                for j, var in enumerate(new_line):
-                    if var in self._variable_map:
-                        #print 'b', new_line
-                        new_line[j] = self._variable_map[var]
-                        #print 'a', new_line
-                self._assembly[i] = ' '.join(new_line)
+    #def _variables_to_registers(self):
+    #    for i in range(2):
+    #        for i, line in enumerate(self._assembly):
+    #            new_line = line.split()
+    #            for j, var in enumerate(new_line):
+    #                if var in self._variable_map:
+    #                    #print 'b', new_line
+    #                    new_line[j] = self._variable_map[var]
+    #                    #print 'a', new_line
+    #            self._assembly[i] = ' '.join(new_line)
 
 
 def condition_for_condition(c):

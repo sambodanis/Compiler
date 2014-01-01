@@ -20,17 +20,17 @@ def main():
     simplify_ast(ast)
     fix_math(ast)
     print_ast(ast, True)
-    #irt_generator = IRTree.irt(ast)
-    #ir = irt_generator.generate_irt()
+    irt_generator = IRTree.irt(ast)
+    ir = irt_generator.generate_irt()
     #print ir
     #for line in ir:
     #    print ' '.join(line)
-    #write_ir_file_num(file_num, ir)
-    #cg = CodeGenerator.CodeGenerator(ir)
-    #assembly_code = cg.generate_code()
-    #print assembly_code
-    #print ''
-    #cg.print_assembly_to_file(file_num)
+    write_ir_file_num(file_num, ir)
+    cg = CodeGenerator.CodeGenerator(ir)
+    assembly_code = cg.generate_code()
+    print assembly_code
+    print ''
+    cg.print_assembly_to_file(file_num)
 
 
 def load_config():
@@ -122,6 +122,16 @@ def fix_math(ast):
         ast.children[2].data[0] = inverted_conditions[ast.children[2].data[0]]
         ast.children[2].children = [ast.children[1], ast.children[3]]
         ast.children = [ast.children[0], ast.children[2]]
+    elif ast.type == 'programFront':
+        if len(ast.children) > 1:
+            new_children = []
+            next_node = ast.children[1]
+            while True:
+                new_children.append(next_node.children[0])
+                if len(next_node.children) == 1:
+                    break
+                next_node = next_node.children[1]
+            ast.children = [ast.children[0]] + new_children
     for c in ast.children:
         fix_math(c)
 

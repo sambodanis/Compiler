@@ -148,11 +148,26 @@ class irt:
     def _gen_lpElseCompoundStatementRp_ir(self, root, temp_number):
         return self._gen_ir(root.children[0], temp_number)
 
+    def _gen_program_front_ir(self, root, temp_number):
+        pass
+        for array in root.children:
+            self._lines.append([temp(temp_number), equals(), 'Alloc', str(int(array.data[1]))])
+            self._lines.append([array.data[0], equals(), temp(temp_number)])
+            temp_number += 1
+        return temp_number
+
     def _gen_ir(self, root, temp_number):
         if debug:
             self._lines += [root.type]
         if root.type == 'program':
-            return [self._gen_ir(c, temp_number) for c in root.children]
+            if len(root.children) == 2:
+                temp_number += self._gen_ir(root.children[0], temp_number)
+                self._gen_ir(root.children[1], temp_number)
+            else:
+                self._gen_ir(root.children[0], temp_number)
+            #return [self._gen_ir(c, temp_number) for c in root.children]
+        elif root.type == 'programFront':
+            return self._gen_program_front_ir(root, temp_number)
         elif root.type == 'compoundStatement':
             results = []
             for c in root.children:
