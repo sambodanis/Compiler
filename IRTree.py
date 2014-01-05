@@ -177,6 +177,21 @@ class irt:
     def _gen_bracketed_expression_star_ir(self, root, temp_number):
         return iter_flatten(self._gen_ir(root.children[0], temp_number))[0]
 
+    def _gen_function_star_ir(self, root, temp_number):
+        pass
+
+    def _gen_id_star_ir(self, root, temp_number):
+        pass
+
+    def _gen_function_ir(self, root, temp_number):
+        pass
+
+    def _gen_return_q_ir(self, root, temp_number):
+        pass
+
+    def _gen_function_call_ir(self, root, temp_number):
+        pass
+
     def _gen_ir(self, root, temp_number):
         if debug:
             self._lines += [root.type]
@@ -228,8 +243,16 @@ class irt:
             return self._gen_lpElseCompoundStatementRp_ir(root, temp_number)
         elif root.type == 'bracketedExpressionStar':
             return self._gen_bracketed_expression_star_ir(root, temp_number)
-        #elif root.type == 'functionStar':
-
+        elif root.type == 'functionStar':
+            return self._gen_function_star_ir(root, temp_number)
+        elif root.type == 'idStar':
+            return self._gen_id_star_ir(root, temp_number)
+        elif root.type == 'function':
+            return self._gen_function_ir(root, temp_number)
+        elif root.type == 'returnQ':
+            return self._gen_return_q_ir(root, temp_number)
+        elif root.type == 'functionCall':
+            return self._gen_function_call_ir(root, temp_number)
         return "none"
 
     def generate_irt(self):

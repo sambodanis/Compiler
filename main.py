@@ -20,17 +20,16 @@ def main():
     simplify_ast(ast)
     fix_math(ast)
     print_ast(ast, True)
-    #irt_generator = IRTree.irt(ast)
-    #ir = irt_generator.generate_irt()
-    #for line in ir:
-    #    print ' '.join(line)
-    #write_ir_file_num(file_num, ir)
+    irt_generator = IRTree.irt(ast)
+    ir = irt_generator.generate_irt()
+    for line in ir:
+        print ' '.join(line)
+    write_ir_file_num(file_num, ir)
     #cg = CodeGenerator.CodeGenerator(ir)
-    #assembly_code = cg.generate_code()
+    #assembly   _code = cg.generate_code()
     #print assembly_code
     #print ''
     #cg.print_assembly_to_file(file_num)
-
 
 
 def load_config():
