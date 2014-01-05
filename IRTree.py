@@ -181,7 +181,11 @@ class irt:
         if debug:
             self._lines += [root.type]
         if root.type == 'program':
-            if len(root.children) == 2:
+            if len(root.children) == 3:
+                temp_number += self._gen_ir(root.children[0], temp_number)
+                self._gen_ir(root.children[1], temp_number)
+
+            elif len(root.children) == 2:
                 temp_number += self._gen_ir(root.children[0], temp_number)
                 self._gen_ir(root.children[1], temp_number)
             else:
@@ -224,6 +228,8 @@ class irt:
             return self._gen_lpElseCompoundStatementRp_ir(root, temp_number)
         elif root.type == 'bracketedExpressionStar':
             return self._gen_bracketed_expression_star_ir(root, temp_number)
+        #elif root.type == 'functionStar':
+
         return "none"
 
     def generate_irt(self):

@@ -126,11 +126,13 @@ def fix_math(ast):
         ast.children[2].data[0] = inverted_conditions[ast.children[2].data[0]]
         ast.children[2].children = [ast.children[1], ast.children[3]]
         ast.children = [ast.children[0], ast.children[2]]
-    elif ast.type == 'programFront' or ast.type == 'expressionStar':
+    elif ast.type == 'programFront' or ast.type == 'expressionStar' or ast.type == 'functionStar':
         if len(ast.children) > 1:
             new_children = []
             next_node = ast.children[1]
             while True:
+                if len(next_node.children) == 0:  # So that it works for functionStar
+                    break
                 new_children.append(next_node.children[0])
                 if len(next_node.children) == 1:
                     break

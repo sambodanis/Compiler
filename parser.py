@@ -143,7 +143,7 @@ class ASTGenerator(Parser):
     )
 
     def p_program(self, p):
-        '''program : programFront functionStar compoundStatement'''
+        '''program : functionStar programFront compoundStatement'''
         # if trace: print 'a'
         if p[1]:
             p[0] = AST.AST('program', None, p[1:], False)
@@ -157,9 +157,18 @@ class ASTGenerator(Parser):
         p[0] = AST.AST('functionStar', None, p[1:], False)
 
     def p_function(self, p):
-        ''' function : FUNCTION ID LPAREN idStar RPAREN compoundStatement RETURN expression SEMI ENDFUNCTION
+        ''' function : FUNCTION ID LPAREN idStar RPAREN programFront compoundStatement returnQ ENDFUNCTION
         '''
-        p[0] = AST.AST('function', p[2], [p[4], p[6], p[8]], False)
+        p[0] = AST.AST('function', p[2], [x for x in p[4:] if x and not isinstance(x, str)], False)
+
+    def p_returnQ(self, p):
+        ''' returnQ : RETURN expression SEMI
+        | empty
+        '''
+        if len(p) > 2:
+            p[0] = AST.AST('returnQ', None, p[2], False)
+        else:
+            p[0] = AST.AST('returnQ', None, None, False)
 
     def p_compoundStatement(self, p):
         '''compoundStatement : BEGIN statementStar END'''
@@ -208,17 +217,21 @@ class ASTGenerator(Parser):
         | WRITELN
         | IF expression relation expression compoundStatement lpElseCompoundStatementRp
         | REPEAT compoundStatement UNTIL expression relation expression
+        | functionCall
         '''
         # if trace: print 'g'
         if len(p) == 2:
-            p[0] = AST.AST('statement', p[1], None, True)
+            if isinstance(p[1], AST.AST):
+                p[0] = AST.AST('statement', 'void', p[1], False)
+            else:
+                p[0] = AST.AST('statement', p[1], None, True)
         elif len(p) == 4:
             p[0] = AST.AST('statement', p[2], [p[1], p[3]], False)
         elif len(p) == 5:
             if isinstance(p[3], AST.AST):
                 p[0] = AST.AST('statement', p[1], p[3], False)
             else:
-                p[0] = AST.AST('statement', [p[1], p[3]], None, True) # Check if leaf
+                p[0] = AST.AST('statement', [p[1], p[3]], None, True)  # Check if leaf
         elif len(p) == 7:
             if p[1] == 'if':
                 p[0] = AST.AST('statement', p[1], p[2:], False)
