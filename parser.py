@@ -47,6 +47,9 @@ class ASTGenerator(Parser):
 
 
     reserved = {
+        'def': 'FUNCTION',
+        'edef': 'ENDFUNCTION',
+        'return': 'RETURN',
         'array': 'ARRAY',
         'begin': 'BEGIN',
         'else': 'ELSE',
@@ -140,12 +143,23 @@ class ASTGenerator(Parser):
     )
 
     def p_program(self, p):
-        '''program : programFront compoundStatement'''
+        '''program : programFront functionStar compoundStatement'''
         # if trace: print 'a'
         if p[1]:
             p[0] = AST.AST('program', None, p[1:], False)
         else:
             p[0] = AST.AST('program', None, p[2:], False)
+
+    def p_functionStar(self, p):
+        ''' functionStar : function functionStar
+        | empty
+        '''
+        p[0] = AST.AST('functionStar', None, p[1:], False)
+
+    def p_function(self, p):
+        ''' function : FUNCTION ID LPAREN idStar RPAREN compoundStatement RETURN expression SEMI ENDFUNCTION
+        '''
+        p[0] = AST.AST('function', p[2], [p[4], p[6], p[8]], False)
 
     def p_compoundStatement(self, p):
         '''compoundStatement : BEGIN statementStar END'''
@@ -210,7 +224,9 @@ class ASTGenerator(Parser):
                 p[0] = AST.AST('statement', p[1], p[2:], False)
             else:
                 p[0] = AST.AST('statement', p[1], [p[2]] + p[4:], False)
-
+        #elif len(p) == 8:
+        #    p[0] = AST.AST('functionDeclaration', p[2], [p[4], p[6]], False)
+            #print 'h'
 
     def p_lpElseCompoundStatementRp(self, p):
         '''lpElseCompoundStatementRp : ELSE compoundStatement
@@ -256,10 +272,6 @@ class ASTGenerator(Parser):
         | plusOrMinus term
         | empty
         '''
-        #'''pomTermStar : pomTermStar plusOrMinus term
-        #| plusOrMinus term
-        #| empty
-        #'''
         # if trace: print 'l'
         if len(p) > 2:
             p[0] = AST.AST('pomTermStar', None, p[1:], False)
@@ -290,19 +302,15 @@ class ASTGenerator(Parser):
         | timesOrDivide factor
         | empty
         '''
-        #'''tdFactorStar : tdFactorStar timesOrDivide factor
-        #| timesOrDivide factor
-        #| empty
-        #'''
         # if trace: print 'p'
         if len(p) > 2:
             p[0] = AST.AST('tdFactorStar', None, p[1:], False)
-
 
     def p_factor(self, p):
         '''factor : variable
         | CONSTANT
         | LPAREN expression RPAREN
+        | functionCall
         '''
         # if trace: print 'q'
         if len(p) == 2:
@@ -325,6 +333,36 @@ class ASTGenerator(Parser):
             p[0] = AST.AST('bracketedExpressionStar', None, p[2], False)
         else:
             p[0] = p[1]
+
+    #def p_functionDeclaration(self, p):
+    #    ''' functionDeclaration : FUNCTION ID LPAREN idStar RPAREN compoundStatement ENDFUNCTION
+    #    '''
+    #    p[0] = AST.AST('functionDeclaration', p[2], [p[4], p[6]], False)
+
+    def p_idStar(self, p):
+        ''' idStar : ID COMMA idStar
+        | ID
+        | empty
+        '''
+        if len(p) > 2:
+            p[0] = AST.AST('idStar', p[1], p[3], False)
+        else:
+            p[0] = AST.AST('idStar', p[1] if p[1] else [], [], False)
+
+    def p_functionCall(self, p):
+        ''' functionCall : ID LPAREN expressionStar RPAREN
+        '''
+        p[0] = AST.AST('functionCall', p[1], p[3], False)
+
+    def p_expressionStar(self, p):
+        ''' expressionStar : expression COMMA expressionStar
+        | expression
+        | empty
+        '''
+        if len(p) > 2:
+            p[0] = AST.AST('expressionStar', None, [p[1], p[3]], False)
+        else:
+            p[0] = AST.AST('expressionStar', None, p[1], False)
 
     def p_empty(self, p):
         'empty :'

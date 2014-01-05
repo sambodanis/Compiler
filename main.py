@@ -20,16 +20,16 @@ def main():
     simplify_ast(ast)
     fix_math(ast)
     print_ast(ast, True)
-    irt_generator = IRTree.irt(ast)
-    ir = irt_generator.generate_irt()
-    for line in ir:
-        print ' '.join(line)
-    write_ir_file_num(file_num, ir)
-    cg = CodeGenerator.CodeGenerator(ir)
-    assembly_code = cg.generate_code()
-    print assembly_code
-    print ''
-    cg.print_assembly_to_file(file_num)
+    #irt_generator = IRTree.irt(ast)
+    #ir = irt_generator.generate_irt()
+    #for line in ir:
+    #    print ' '.join(line)
+    #write_ir_file_num(file_num, ir)
+    #cg = CodeGenerator.CodeGenerator(ir)
+    #assembly_code = cg.generate_code()
+    #print assembly_code
+    #print ''
+    #cg.print_assembly_to_file(file_num)
 
 
 
@@ -55,6 +55,8 @@ def write_ir_file_num(n, ir):
 # hold no important data
 # Also removes any null nodes from the AST
 def simplify_ast(ast):
+    if not ast:
+        return
     try: # remove potentially null children from rules like: A -> B | empty
         while True:
             ast.children.remove(None)
@@ -84,6 +86,8 @@ def simplify_ast(ast):
 # Basically implemented as a bunch of tree rotations
 # Does similar thing for all relations
 def fix_math(ast):
+    if not ast:
+        return
     if ast.type == 'expression':
         if len(ast.children) == 3:
             new_ast = AST.AST('negate', ast.children[0].data[0], ast.children[1:2])
@@ -122,7 +126,7 @@ def fix_math(ast):
         ast.children[2].data[0] = inverted_conditions[ast.children[2].data[0]]
         ast.children[2].children = [ast.children[1], ast.children[3]]
         ast.children = [ast.children[0], ast.children[2]]
-    elif ast.type == 'programFront':
+    elif ast.type == 'programFront' or ast.type == 'expressionStar':
         if len(ast.children) > 1:
             new_children = []
             next_node = ast.children[1]
@@ -132,6 +136,18 @@ def fix_math(ast):
                     break
                 next_node = next_node.children[1]
             ast.children = [ast.children[0]] + new_children
+    elif ast.type == 'function':
+        if len(ast.children[0].children) > 0 and ast.children[0].type == 'idStar':
+            new_data = []
+            next_node = ast.children[0]
+            while True:
+                new_data.append(next_node.data[0])
+                if len(next_node.children) > 0:
+                    next_node = next_node.children[0]
+                else:
+                    break
+            ast.children[0].data = new_data
+            ast.children[0].children = []
     elif ast.type == 'bracketedExpressionStar':
         f = AST.AST('factor', ['4.0'], [])
         g = AST.AST('factor', [], ast.children[0])

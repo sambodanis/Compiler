@@ -42,6 +42,7 @@ class CodeGenerator:
         self._last_array_c = -1
         self._arrays = {}
         self._PC = 2
+        #self._PC = 3
         self._free_registers = set()
         #self.memory = Memory.Memory(ir)
 
@@ -89,12 +90,14 @@ class CodeGenerator:
         if self._PC % 4 != 0:
             for i in range(4 - (self._PC % 4)):
                 self._assembly.append(' '.join(['DATA', '0']))
+                #self._assembly.insert(self._PC, ' '.join(['DATA', '0']))
                 self._inc_pc()
                 # Set counter for current var
         self._last_array_c = self._PC
         for i in range(int(line[3])):
             for j in range(4):
                 self._assembly.append(' '.join(['DATA', '0']))
+                #self._assembly.insert(self._PC, ' '.join(['DATA', '0']))
                 self._inc_pc()
         return ''
 
@@ -137,11 +140,14 @@ class CodeGenerator:
         return code
 
     def _string(self, line):
+        #curr_pc = self._PC - 1
         curr_pc = self._PC
         for letter in line[2][1:-1]:
             self._assembly.append(' '.join(['DATA', str(ord(letter)), ';', str(self._PC)]))
+            #self._assembly.insert(self._PC, ' '.join(['DATA', str(ord(letter)), ';', str(self._PC)]))
             self._inc_pc()
         self._assembly.append(' '.join(['DATA', '0']))
+        #self._assembly.insert(self._PC, ' '.join(['DATA', '0']))
         self._inc_pc()
         self._string_map[line[0]] = str(curr_pc)
         #code = ' '.join(['MOVIR', line[0], str(float(curr_pc))])
