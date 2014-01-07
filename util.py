@@ -17,12 +17,13 @@ class Stack:
 
     def __str__(self):
         c = self.top
+        res = []
         while True:
-            print c,
             if c is None:
                 break
+            res.append(c.data)
             c = c.next
-        print ''
+        return '[' + ', '.join(res) + ']'
 
     def push(self, item):
         if self.top is None:
