@@ -25,11 +25,11 @@ def main():
     for line in ir:
         print ' '.join(line)
     write_ir_file_num(file_num, ir)
-    #cg = CodeGenerator.CodeGenerator(ir)
-    #assembly   _code = cg.generate_code()
-    #print assembly_code
-    #print ''
-    #cg.print_assembly_to_file(file_num)
+    cg = CodeGenerator.CodeGenerator(ir)
+    assembly_code = cg.generate_code()
+    print assembly_code
+    print ''
+    cg.print_assembly_to_file(file_num)
 
 
 def load_config():
@@ -156,6 +156,10 @@ def fix_math(ast):
         j = AST.AST('term', [], new_sub)
         h = AST.AST('expression', [], j)
         ast.children = [h]
+    elif ast.type == 'program':
+        if ast.children[0].type == 'functionStar' and len(ast.children[0].children) == 0:
+            ast.children = ast.children[1:]
+
     for c in ast.children:
         fix_math(c)
 

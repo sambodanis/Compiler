@@ -1,5 +1,6 @@
 import AST
 import sys
+from util import *
 
 __author__ = 'sambodanis'
 
@@ -7,12 +8,13 @@ debug = False
 
 
 class irt:
-
     def __init__(self, ast):
         self._ast_root = ast
         self._lines = []
         self.count = 0
         self._label_num = 0
+        self._reserved_words = {'write', 'writeln', 'writes', 'read', 'Goto', 'ifZ', 'Alloc', 'BeginFunc', 'EndFunc',
+                                'FunctionCall', 'FunctionCallEnd', 'PushParam', 'PopParam'}
 
     def _gen_statement_ir(self, root, temp_number):
         if root.data[0] == 'writeln':
@@ -106,7 +108,9 @@ class irt:
             self._gen_ir(root.children[0], temp_number)
             condition = self._gen_ir(root.children[1], temp_number)
             self._lines.append(['ifZ', condition, 'Goto', start_label])
-
+        elif root.data[0] == 'void':
+            res = self._gen_ir(root.children[0], temp_number)
+            return res
 
         return "none"
 
@@ -178,34 +182,67 @@ class irt:
         return iter_flatten(self._gen_ir(root.children[0], temp_number))[0]
 
     def _gen_function_star_ir(self, root, temp_number):
-        pass
+        for function in root.children:
+            self._lines.append([label(function.data[0])])
+            self._lines.append(['BeginFunc'])
+            self._gen_ir(function, temp_number)
+            self._lines.append(['EndFunc'])
 
     def _gen_id_star_ir(self, root, temp_number):
-        pass
+        for i, d in enumerate(root.data):
+            self._lines.append([d, equals(), temp(temp_number + i)])
+        return len(root.data)
 
     def _gen_function_ir(self, root, temp_number):
-        pass
+        # handle arg values
+        #print len(root.children), [c.type for c in root.children]
+        num_args = self._gen_ir(root.children[0], temp_number)
+        temp_number += num_args
+        function_body_eval = self._gen_ir(root.children[1], temp_number)
+        self._lines.append(['Goto', 'Prev'])
 
     def _gen_return_q_ir(self, root, temp_number):
         pass
 
     def _gen_function_call_ir(self, root, temp_number):
-        pass
+        pre_data = self._gen_ir(root.children[0], temp_number)
+        self._lines.append(['FunctionCall'])
+        self._lines.append(['Goto', label(root.data[0])])
+        self._lines.append([label(self._label_num)])
+        self._lines.append(['FunctionCallEnd'])
+        self._label_num += 1
+        return pre_data
+
+    def _gen_expression_star_ir(self, root, temp_number):
+        for i, expression in enumerate(root.children):
+            x = iter_flatten(self._gen_ir(expression, temp_number + i))
+            #print x
 
     def _gen_ir(self, root, temp_number):
         if debug:
             self._lines += [root.type]
         if root.type == 'program':
+            # Todo: Add the start main label
+            #print len(root.children)
+            #print [c.type for c in root.children]
             if len(root.children) == 3:
-                temp_number += self._gen_ir(root.children[0], temp_number)
+                # TODO: impl this, curr lines below are bs
+                temp_number += self._gen_ir(root.children[1], temp_number)
+                self._gen_ir(root.children[0], temp_number)
+                self._gen_ir(root.children[2], temp_number)
+            elif len(root.children) == 2 and root.children[0].type == 'functionStar':
+                # maybe gen array child code first so know temp offset
+                self._gen_ir(root.children[0], temp_number)
+                self._lines.append([label('main')])
+                self._lines.append(['BeginFunc'])
                 self._gen_ir(root.children[1], temp_number)
-
+                self._lines.append(['EndFunc'])
             elif len(root.children) == 2:
-                temp_number += self._gen_ir(root.children[0], temp_number)
+                temp_number += self._gen_ir(root.children[0], temp_number)  #offset for num arrays
                 self._gen_ir(root.children[1], temp_number)
             else:
                 self._gen_ir(root.children[0], temp_number)
-            #return [self._gen_ir(c, temp_number) for c in root.children]
+                #return [self._gen_ir(c, temp_number) for c in root.children]
         elif root.type == 'programFront':
             return self._gen_program_front_ir(root, temp_number)
         elif root.type == 'compoundStatement':
@@ -253,12 +290,51 @@ class irt:
             return self._gen_return_q_ir(root, temp_number)
         elif root.type == 'functionCall':
             return self._gen_function_call_ir(root, temp_number)
+        elif root.type == 'expressionStar':
+            return self._gen_expression_star_ir(root, temp_number)
         return "none"
 
     def generate_irt(self):
-        special_registers = 1  # offset usable registers by number of internally used registers, eg 0 in R0
+        # offset usable registers by number of internally used registers, 0 in R0, SP in R1, 1 in R2
+        special_registers = 3
         ir = self._gen_ir(self._ast_root, special_registers)
+        #Todo: Assign function memory counts
+        self._function_memory()
         return self._lines
+
+    def _block_memory(self, curr_block):
+        block_memory = reduce(lambda x, y: x + y,
+                              [4 for s in curr_block if s[0] not in self._reserved_words and s[0][0] != '~'])
+        return block_memory
+
+    def _function_memory(self):
+        function_blocks = []
+        curr_block = []
+        block_memory = 0
+        params_to_push = []
+        for i, line in enumerate(self._lines):
+            curr_block.append(line)
+            if line[0] == 'FunctionCall':
+                params_to_push = [s for s in curr_block if s[0] not in self._reserved_words and s[0][0] != '~']
+                params_to_push.append(self._lines[i + 2])
+                for p in params_to_push:
+                    curr_block.append(['PushParam', p[0]])
+                    # push return address?
+                block_memory = self._block_memory(curr_block)
+            if line[0] == 'FunctionCallEnd':
+                curr_block[-1].append(str(block_memory))
+                for p in params_to_push[
+                         len(params_to_push) - 2::-1]:  # Don't pop the label off as it'll be popped in the function
+                    curr_block.append(['PopParam', p[0]])
+            if line[0] == 'EndFunc':
+                block_memory = self._block_memory(curr_block)
+                curr_block[1].append(str(block_memory))
+                function_blocks.append(curr_block)
+                curr_block = []
+
+        self._lines = [l for k in function_blocks for l in k]
+        #for line in self._lines:
+        #    print line
 
 
 def equals():
