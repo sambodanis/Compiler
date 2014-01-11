@@ -5,10 +5,9 @@ from util import *
 
 
 class CodeGenerator:
-    #todo give variables scopes to give start and endpoints of when
-    #todo to reassign them. maybe do a variables to registers
-    #todo run through after each variable's scope ends.
 
+    # TODO: run through after each variable's scope ends.
+    # TODO: parameter passing and return values
     _real_conditions = {'<', '>=', '!=', '=='}
 
     def __init__(self, ir):
@@ -59,6 +58,7 @@ class CodeGenerator:
         # Stack containing register names in arrays for each stack frame so that
         # after exiting a function all registers have their old data in them.
         self._function_pp_stack = Stack()
+        #self._fp_stack_stack = Stack()  #
         self._next_line = None
         self._current_function = None
         #self.memory = Memory.Memory(ir)
@@ -73,6 +73,7 @@ class CodeGenerator:
                 #    self._next_line = self._lines[i + 1]
                 comment = ' ; ' + ' '.join(line)
                 t = self._code_for_line(self._temps_to_registers(line))
+                #print t
                 assembly_for_line = ' '.join(t)
                 self._assembly.append(assembly_for_line + comment)
                 #print line, assembly_for_line
@@ -134,14 +135,14 @@ class CodeGenerator:
         if line[1] == 'Prev':
             reg = self._register()
             #self._assembly.append(' '.join(['LOAD', reg, 'R1', str(-4)]))
+            self._dec_sp()
             self._assembly.append(' '.join(['LOAD', reg, 'R1', '0']))
             code = ['JUMP', reg]
-            self._dec_sp()
+            #self._dec_sp()
             self._free_registers.add(reg)
             return code
         elif not line[1][2:].isdigit():
             self._prev_stack.push(self._next_line)
-        #print 'v', line, return_label
         code = ['JMP', self._label_from_label(return_label)[:-1]]
         return code
 
@@ -206,9 +207,9 @@ class CodeGenerator:
 
     def _begin_func(self, line):
         self._function_stack_address_map[self._current_function] = self._PC
-        for i in range(int(line[1])):
-            self._assembly.append(' '.join(['DATA', '0']))
-            #self._inc_pc()
+        #for i in range(int(line[1])):
+        #    self._assembly.append(' '.join(['DATA', '0']))
+
         return ''
 
     def _function_call(self, line):
@@ -218,19 +219,24 @@ class CodeGenerator:
         new_reg = None
         if line[1][0] == '~':
             l = self._label_from_label(line)[:-1]
+            #print l, line
             new_reg = self._register()
-            print line, l
             self._assembly.append(' '.join(['IADDR', new_reg, l]))
             store_data = new_reg
         else:
             store_data = line[1] if line[1] not in self._variable_map else self._variable_map[line[1]]
             self._function_pp_stack.push(store_data)
+        for i in range(4):
+            self._assembly.append(' '.join(['DATA', '0']))
         code = ['STORE', store_data, 'R1', '0']
+        self._assembly.append(' '.join(code))
+        #if line[1][0] != '~':
         self._inc_sp()
         if new_reg is not None:
             self._free_registers.add(new_reg)
             self._offset = 0
-        return code
+        #return code
+        return ''
 
     def _function_call_end(self, line):
         #for i in range(4):
@@ -241,9 +247,17 @@ class CodeGenerator:
         #function_stack_idx = self._function_stack_address_map[self._current_function]
         #self._assembly.append(' '.join(['MOVIR', 'R1', str(function_stack_idx)]))
         #self._offset -= 4
-        code = ['LOAD', self._function_pp_stack.pop(), 'R1', '0']
+        code = ['LOAD', line[1], 'R1', '0']
+        #t = self._function_pp_stack.pop()
+        #if t:
+        #    code = ['LOAD', t, 'R1', '0']
+        #else:
+        #    code = ['LOAD', self._register(), 'R1', '0']
         self._dec_sp()
-        return code
+        self._assembly.append(' '.join(code))
+
+        #return code
+        return ''
 
     def _end_func(self, line):
         self._offset = 0

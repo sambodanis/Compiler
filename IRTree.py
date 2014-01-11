@@ -190,6 +190,7 @@ class irt:
 
     def _gen_id_star_ir(self, root, temp_number):
         for i, d in enumerate(root.data):
+            self._lines.append(['PopParam', temp(temp_number + i)])
             self._lines.append([d, equals(), temp(temp_number + i)])
         return len(root.data)
 
@@ -205,8 +206,11 @@ class irt:
         pass
 
     def _gen_function_call_ir(self, root, temp_number):
-        pre_data = self._gen_ir(root.children[0], temp_number)
+        pre_data = self._gen_ir(root.children[0], temp_number + 1)
+        print 'v', pre_data
         self._lines.append(['FunctionCall'])
+        for arg in reversed(pre_data):
+            self._lines.append(['PushParam', arg[0]])
         self._lines.append(['Goto', label(root.data[0])])
         self._lines.append([label(self._label_num)])
         self._lines.append(['FunctionCallEnd'])
@@ -214,9 +218,11 @@ class irt:
         return pre_data
 
     def _gen_expression_star_ir(self, root, temp_number):
-        for i, expression in enumerate(root.children):
-            x = iter_flatten(self._gen_ir(expression, temp_number + i))
-            #print x
+
+        return [iter_flatten(self._gen_ir(expression, temp_number + i)) for i, expression in enumerate(root.children)]
+        #for i, expression in enumerate(root.children):
+        #    x = iter_flatten(self._gen_ir(expression, temp_number + i))
+        #    print x
 
     def _gen_ir(self, root, temp_number):
         if debug:
@@ -316,7 +322,9 @@ class irt:
             curr_block.append(line)
             if line[0] == 'FunctionCall':
                 params_to_push = [s for s in curr_block if s[0] not in self._reserved_words and s[0][0] != '~']
-                params_to_push.append(self._lines[i + 2])
+                #params_to_push.append(self._lines[i + 2])
+                params_to_push.append([v for v in self._lines[i:] if v[0][0] == '~'][0])  # End label
+                print params_to_push
                 for p in params_to_push:
                     curr_block.append(['PushParam', p[0]])
                     # push return address?

@@ -18,4 +18,4 @@ else:
 # Run compiler on specified test file and then
 # run output through assembler and emulator
 os.system('python main.py')
-#os.system('./assmule -dc Assembly/testAss' + config['file_num'] + '.ass')
+os.system('./assmule -dc Assembly/testAss' + config['file_num'] + '.ass')
