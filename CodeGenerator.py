@@ -133,13 +133,15 @@ class CodeGenerator:
         return_label = [line[1]]
         #print 'k', self._prev_stack
         if line[1] == 'Prev':
-            reg = self._register()
-            #self._assembly.append(' '.join(['LOAD', reg, 'R1', str(-4)]))
-            self._dec_sp()
-            self._assembly.append(' '.join(['LOAD', reg, 'R1', '0']))
-            code = ['JUMP', reg]
+            #self._assembly.append(' '.join(['LOAD', 'R3', 'R1', '0']))
+            #return ''
+            ##reg = self._register()
             #self._dec_sp()
-            self._free_registers.add(reg)
+            ##self._assembly.append(' '.join(['LOAD', reg, 'R1', '0']))
+            #self._assembly.append(' '.join(['LOAD', 'R3', 'R1', '0']))
+            ##code = ['JUMP', reg]
+            code = ['JUMP', 'R3']
+            ##self._free_registers.add(reg)
             return code
         elif not line[1][2:].isdigit():
             self._prev_stack.push(self._next_line)
@@ -247,17 +249,18 @@ class CodeGenerator:
         #function_stack_idx = self._function_stack_address_map[self._current_function]
         #self._assembly.append(' '.join(['MOVIR', 'R1', str(function_stack_idx)]))
         #self._offset -= 4
+        if line[1] == 'Prev':  # Store function return address in return register
+            line[1] = 'R3'
         code = ['LOAD', line[1], 'R1', '0']
-        #t = self._function_pp_stack.pop()
-        #if t:
-        #    code = ['LOAD', t, 'R1', '0']
-        #else:
-        #    code = ['LOAD', self._register(), 'R1', '0']
+
         self._dec_sp()
         self._assembly.append(' '.join(code))
 
         #return code
         return ''
+
+    def _return_q(self, line):
+        pass
 
     def _end_func(self, line):
         self._offset = 0

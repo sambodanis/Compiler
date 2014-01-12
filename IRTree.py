@@ -16,6 +16,33 @@ class irt:
         self._reserved_words = {'write', 'writeln', 'writes', 'read', 'Goto', 'ifZ', 'Alloc', 'BeginFunc', 'EndFunc',
                                 'FunctionCall', 'FunctionCallEnd', 'PushParam', 'PopParam'}
 
+    def _gen_program_ir(self, root, temp_number):
+        # Todo: Add the start main label
+        #print len(root.children)
+        #print [c.type for c in root.children]
+        if len(root.children) == 3:
+            # TODO: impl this, curr lines below are bs
+            temp_number += self._gen_ir(root.children[1], temp_number)
+            self._gen_ir(root.children[0], temp_number)
+            self._gen_ir(root.children[2], temp_number)
+        elif len(root.children) == 2 and root.children[0].type == 'functionStar':
+            # maybe gen array child code first so know temp offset
+            self._gen_ir(root.children[0], temp_number)
+            self._lines.append([label('main')])
+            self._lines.append(['BeginFunc'])
+            self._gen_ir(root.children[1], temp_number)
+            self._lines.append(['EndFunc'])
+        elif len(root.children) == 2:
+            temp_number += self._gen_ir(root.children[0], temp_number)  #offset for num arrays
+            self._gen_ir(root.children[1], temp_number)
+        else:
+            self._lines.append([label('main')])
+            self._lines.append(['BeginFunc'])
+            self._gen_ir(root.children[0], temp_number)
+            self._lines.append(['EndFunc'])
+
+            #return [self._gen_ir(c, temp_number) for c in root.children]
+
     def _gen_statement_ir(self, root, temp_number):
         if root.data[0] == 'writeln':
             self.count += 1
@@ -40,15 +67,16 @@ class irt:
         elif root.data[0] == ':=':
             val = iter_flatten([self._gen_ir(root.children[1], temp_number)])
             var = self._gen_ir(root.children[0], temp_number)
-            #print val, 'v', var
             if len(var) == 1 and len(val) == 1:
                 #self._lines.append(['hi'])
 
                 self._lines.append([var[0], equals(), val[0]])
             else:
+                print val, 'v', var
                 #self._lines.append(['hi'])
                 #self._lines.append([var[0], var[1], equals(), val[0]])
                 self._lines.append(var + [equals()] + val)
+                # todo maybe return var here so that calling function knows what to assign popoff to.
         elif root.data[0] == 'read':
             var = self._gen_ir(root.children[0], temp_number)
             #print 'v', var
@@ -111,7 +139,7 @@ class irt:
         elif root.data[0] == 'void':
             res = self._gen_ir(root.children[0], temp_number)
             return res
-
+        #elif root.'
         #return "none"
 
     def _gen_unary_op_ir(self, root, temp_number):
@@ -203,22 +231,32 @@ class irt:
         num_args = self._gen_ir(root.children[0], temp_number)
         temp_number += num_args
         function_body_eval = self._gen_ir(root.children[1], temp_number)
+        self._lines.append(['PopParam', 'Prev'])
+        return_q = self._gen_ir(root.children[2], temp_number)
+        self._lines.append(['PushParam', return_q[0]])
         self._lines.append(['Goto', 'Prev'])
 
+        print return_q
+
     def _gen_return_q_ir(self, root, temp_number):
-        pass
+        if root.children:
+            return iter_flatten(self._gen_ir(root.children[0], temp_number))
+        else:
+            return None
 
     def _gen_function_call_ir(self, root, temp_number):
         pre_data = self._gen_ir(root.children[0], temp_number + 1)
-        print 'v', pre_data
+        return_temp = temp(temp_number + 2)
         self._lines.append(['FunctionCall'])
         for arg in reversed(pre_data):
             self._lines.append(['PushParam', arg[0]])
         self._lines.append(['Goto', label(root.data[0])])
         self._lines.append([label(self._label_num)])
+        self._lines.append(['PopParam', return_temp])
         self._lines.append(['FunctionCallEnd'])
         self._label_num += 1
-        return pre_data
+        #return pre_data
+        return return_temp
 
     def _gen_expression_star_ir(self, root, temp_number):
 
@@ -231,31 +269,7 @@ class irt:
         if debug:
             self._lines += [root.type]
         if root.type == 'program':
-            # Todo: Add the start main label
-            #print len(root.children)
-            #print [c.type for c in root.children]
-            if len(root.children) == 3:
-                # TODO: impl this, curr lines below are bs
-                temp_number += self._gen_ir(root.children[1], temp_number)
-                self._gen_ir(root.children[0], temp_number)
-                self._gen_ir(root.children[2], temp_number)
-            elif len(root.children) == 2 and root.children[0].type == 'functionStar':
-                # maybe gen array child code first so know temp offset
-                self._gen_ir(root.children[0], temp_number)
-                self._lines.append([label('main')])
-                self._lines.append(['BeginFunc'])
-                self._gen_ir(root.children[1], temp_number)
-                self._lines.append(['EndFunc'])
-            elif len(root.children) == 2:
-                temp_number += self._gen_ir(root.children[0], temp_number)  #offset for num arrays
-                self._gen_ir(root.children[1], temp_number)
-            else:
-                self._lines.append([label('main')])
-                self._lines.append(['BeginFunc'])
-                self._gen_ir(root.children[0], temp_number)
-                self._lines.append(['EndFunc'])
-
-                #return [self._gen_ir(c, temp_number) for c in root.children]
+            return self._gen_program_ir(root, temp_number)
         elif root.type == 'programFront':
             return self._gen_program_front_ir(root, temp_number)
         elif root.type == 'compoundStatement':
@@ -308,8 +322,9 @@ class irt:
         return "none"
 
     def generate_irt(self):
-        # offset usable registers by number of internally used registers, 0 in R0, SP in R1, 1 in R2
-        special_registers = 3
+        # offset usable registers by number of internally used
+        # registers, 0 in R0, SP in R1, 1 in R2, Return address in R3
+        special_registers = 4
         ir = self._gen_ir(self._ast_root, special_registers)
         #Todo: Assign function memory counts
         self._function_memory()
@@ -331,7 +346,7 @@ class irt:
                 params_to_push = [s for s in curr_block if s[0] not in self._reserved_words and s[0][0] != '~']
                 #params_to_push.append(self._lines[i + 2])
                 params_to_push.append([v for v in self._lines[i:] if v[0][0] == '~'][0])  # End label
-                print params_to_push
+                #print params_to_push
                 for p in params_to_push:
                     curr_block.append(['PushParam', p[0]])
                     # push return address?
