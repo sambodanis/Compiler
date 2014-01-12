@@ -1,52 +1,50 @@
-_t2 = 2.0
-_t3 = 1.0
-_t1 = _t2 * _t3
-write _t1
+~Lmain
+BeginFunc 140
+_t4 = 5.0
+_t3 = _t0 - _t4
+write _t3
 writeln
-_t2 = 5.0
-_t1 = _t0 - _t2
-write _t1
+_t4 = 4.0
+_t5 = 3.0
+_t3 = _t4 + _t5
+write _t3
 writeln
-_t2 = 4.0
-_t3 = 3.0
-_t1 = _t2 + _t3
-write _t1
-writeln
-_t2 = 1.0
-_t5 = 2.0
-_t7 = 6.0
-_t6 = _t0 - _t7
-_t4 = _t5 * _t6
+_t5 = 1.0
+_t7 = 2.0
+_t9 = 6.0
+_t8 = _t0 - _t9
+_t6 = _t7 * _t8
+_t4 = _t5 + _t6
 _t6 = 20.0
 _t7 = 4.0
 _t5 = _t6 / _t7
 _t3 = _t4 - _t5
-_t1 = _t2 + _t3
-write _t1
+write _t3
 writeln
-_t2 = 0.5
-_t1 = _t0 - _t2
-write _t1
+_t4 = 0.5
+_t3 = _t0 - _t4
+write _t3
 writeln
-_t3 = 0.4
-_t2 = _t0 - _t3
-_t3 = 0.3
-_t1 = _t2 - _t3
-write _t1
+_t5 = 0.4
+_t4 = _t0 - _t5
+_t5 = 0.3
+_t3 = _t4 - _t5
+write _t3
 writeln
-_t3 = 0.1
-_t5 = 0.25
-_t6 = 0.05
+_t6 = 0.1
+_t8 = 0.25
+_t9 = 0.05
+_t7 = _t8 + _t9
+_t5 = _t6 / _t7
+_t7 = 0.2
+_t9 = 6.0
+_t8 = _t0 - _t9
+_t6 = _t7 * _t8
 _t4 = _t5 + _t6
-_t2 = _t3 / _t4
-_t5 = 0.2
-_t7 = 6.0
-_t6 = _t0 - _t7
-_t4 = _t5 * _t6
 _t6 = 0.2
 _t7 = 0.4
 _t5 = _t6 / _t7
 _t3 = _t4 - _t5
-_t1 = _t2 + _t3
-write _t1
+write _t3
 writeln
+EndFunc

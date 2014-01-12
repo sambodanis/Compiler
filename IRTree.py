@@ -112,7 +112,7 @@ class irt:
             res = self._gen_ir(root.children[0], temp_number)
             return res
 
-        return "none"
+        #return "none"
 
     def _gen_unary_op_ir(self, root, temp_number):
         if root.data[0] == '-':
@@ -130,6 +130,9 @@ class irt:
     def _gen_pom_term_star_ir(self, root, temp_number):
         left = iter_flatten(self._gen_ir(root.children[0], temp_number + 1))
         right = iter_flatten(self._gen_ir(root.children[1], temp_number + 2))
+        #left = iter_flatten(self._gen_ir(root.children[0], temp_number + 1))
+        #right = iter_flatten(self._gen_ir(root.children[1], temp_number + 2))
+
         self._lines.append([temp(temp_number), equals()] + left + [plus_or_minus(root.data[0])] + right)
         return temp(temp_number)
 
@@ -247,7 +250,11 @@ class irt:
                 temp_number += self._gen_ir(root.children[0], temp_number)  #offset for num arrays
                 self._gen_ir(root.children[1], temp_number)
             else:
+                self._lines.append([label('main')])
+                self._lines.append(['BeginFunc'])
                 self._gen_ir(root.children[0], temp_number)
+                self._lines.append(['EndFunc'])
+
                 #return [self._gen_ir(c, temp_number) for c in root.children]
         elif root.type == 'programFront':
             return self._gen_program_front_ir(root, temp_number)

@@ -19,6 +19,7 @@ def main():
     ast = p.parse(data)
     simplify_ast(ast)
     fix_math(ast)
+    fix_math_again(ast)
     print_ast(ast, True)
     irt_generator = IRTree.irt(ast)
     ir = irt_generator.generate_irt()
@@ -162,6 +163,23 @@ def fix_math(ast):
 
     for c in ast.children:
         fix_math(c)
+
+
+def left_rotation(ast):
+    if ast.type == 'pomTermStar':
+        if ast.children[-1].type == 'pomTermStar':
+            q = ast.children[-1]
+            ast.children[-1] = ast.children[-1].children[0]
+            q.children[0] = ast
+            return left_rotation(q)
+    return ast
+
+
+def fix_math_again(ast):
+    if ast.type == 'expression' and ast.children[0].type == 'pomTermStar':
+        ast.children[0] = left_rotation(ast.children[0])
+    for c in ast.children:
+        fix_math_again(c)
 
 
 def print_ast(ast, write_to_file):

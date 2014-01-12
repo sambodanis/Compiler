@@ -1,8 +1,17 @@
 {test3: program to test expressions containing operators.}
 {Already tested: write statements and constants.}
 begin
-  write(2.0 *1.0);
-  writeln;
+
+  {a := 0.0;
+  b := 0.0;
+  c := -1.0;
+  d := -1.0;
+  a := a - b + c - d;
+  a := a - b + c;
+
+  write(a);
+  writeln;}
+
   write(-5.0);
   writeln;
   write(+4.0+3.0);

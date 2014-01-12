@@ -382,7 +382,6 @@ class ASTGenerator(Parser):
         p[0] = None
         pass
 
-
     def p_error(self, p):
         if p:
             #print p
